@@ -4,6 +4,15 @@ terraform {
       source = "hashicorp/aws"
       version = "6.35.0"
      }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0" # This is the "Translator"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.0"
+    }
+
     }
   backend "s3" {
     bucket = "carbon-aware-k8s-project"
@@ -12,12 +21,33 @@ terraform {
     dynamodb_table =  "terraform-state-lock"
     encrypt = true
     }
+
   }
   provider "aws" {
-   region = "eu-west-2"
+   region = var.aws_region
    default_tags {
     tags = {
-          Project     = "Carbon-Aware-K8s"
+          Project     = var.project_name
           }
      }
+
   }
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_name
+}
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
+} 
+
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    token                  = data.aws_eks_cluster_auth.cluster.token
+  }
+}
+
