@@ -19,3 +19,8 @@ output "cluster_name" {
   description = "The name of the EKS cluster"
   value       = module.eks.cluster_name
 }
+
+output "repository_url" {
+  description = "The URL of the ECR repository for the Flask app"
+  value       = aws_ecr_repository.flask_app.repository_url
+}
