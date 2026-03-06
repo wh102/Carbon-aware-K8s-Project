@@ -4,7 +4,7 @@ module "vpc" {
   enable_dns_hostnames = true
 
   name = "vpc-cak8s"
-  cidr = "10.0.0.0/16"
+  cidr = var.vpc_cidr
 
   azs             = ["${var.aws_region}a", "${var.aws_region}b"]
 

@@ -1,0 +1,17 @@
+variable "aws_region" {
+  type        = string
+  description = "default aws region"
+  default     = "eu-west-2"
+}
+
+variable "project_name" {
+  type        = string
+  description = "Name of the project"
+  default     = "Carbon-aware-K8s-Project"
+}
+
+variable "vpc_cidr" {
+  type        = string
+  description = "The CIDR block for the VPC"
+  default     = "10.0.0.0/16"
+}
