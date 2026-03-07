@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project_name" {
   type        = string
   description = "Name of the project"
-  default     = "Carbon-aware-K8s-Project"
+  default     = "carbon-aware-k8s-project"
 }
 
 variable "vpc_cidr" {
