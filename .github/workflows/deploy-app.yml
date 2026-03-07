@@ -5,6 +5,7 @@ on:
     paths:
       - 'app/**' 
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
