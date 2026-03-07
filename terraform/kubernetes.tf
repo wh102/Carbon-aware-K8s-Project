@@ -52,7 +52,7 @@ resource "kubernetes_deployment" "flask_app" {
 resource "kubernetes_service" "flask_app" {
   metadata {
     name      = "flask-app-service"
-    namespace = kubernetes_namespace.flask_app.metadata.name
+    namespace = kubernetes_namespace.flask_app.metadata[0].name
   }
 
   spec {
