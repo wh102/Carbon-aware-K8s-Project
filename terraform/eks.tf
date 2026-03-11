@@ -36,9 +36,20 @@ module "eks" {
       ami_type       = "AL2023_ARM_64_STANDARD"
       instance_types = ["t4g.small"]
 
+      metadata_options = {
+        http_endpoint               = "enabled"
+        http_tokens                 = "required"
+        http_put_response_hop_limit = 1
+        instance_metadata_tags      = "disabled"
+      }
+
       min_size     = 2
       max_size     = 3
       desired_size = 2
+
+        iam_role_additional_policies = {
+        ebs_csi_policy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
     }
   }
 
