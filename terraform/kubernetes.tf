@@ -25,3 +25,20 @@ resource "kubernetes_secret" "mysql_secret" {
   }
   type = "opaque"
 }
+
+resource "kubernetes_secret" "argocd_repo_creds" {
+  metadata {
+    name      = "private-repo-creds"
+    namespace = "argocd"
+    labels = {
+      "argocd.argoproj.io/secret-type" = "repository"
+    }
+  }
+
+  data = {
+    type     = "git"
+    url      = "https://github.com/wh102/carbon-aware-k8s-project"
+    password = var.github_token
+    username = "wh102"
+  }
+}

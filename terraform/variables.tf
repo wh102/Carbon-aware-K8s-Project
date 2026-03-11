@@ -22,3 +22,9 @@ variable "db_password" {
   sensitive   = true
   default     = "cak8sdb123"
 }
+
+variable "github_token" {
+  description = "GitHub Personal Access Token for ArgoCD private repo access"
+  type        = string
+  sensitive   = true
+}
