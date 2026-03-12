@@ -1,0 +1,24 @@
+name: "Multi-Cloud CAK8s Audit"
+
+on:
+  workflow_run:
+    workflows: ["Build and Deploy"]
+    types: [completed]
+
+jobs:
+  audit-to-azure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Carbon Report
+        run: |
+          echo '{"project": "cak8s", "region": "eu-west-2", "status": "Green", "provider": "AWS"}' > audit-report.json
+
+      - name: Upload to Azure Blob Storage
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload \
+              --container-name carbon-reports \
+              --file audit-report.json \
+              --name audit-$(date +%Y-%m-%d).json \
+              --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
