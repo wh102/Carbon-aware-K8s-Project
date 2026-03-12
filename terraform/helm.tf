@@ -90,3 +90,21 @@ resource "helm_release" "prometheus_stack" {
     value = "256Mi"
   }
 }
+
+resource "helm_release" "kepler" {
+  name             = "kepler"
+  repository       = "https://sustainable-computing-io.github.io/kepler-helm-chart"
+  chart            = "kepler"
+  namespace        = "monitoring"
+  create_namespace = true
+
+  set {
+    name  = "canMountLibModules"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheus.enabled"
+    value = "true"
+  }
+}
