@@ -67,3 +67,26 @@ resource "helm_release" "aws_lb_controller" {
 
   depends_on = [module.lb_controller_pod_identity]
 }
+
+resource "helm_release" "prometheus_stack" {
+  name             = "prometheus"
+  repository       = "https://prometheus-community.github.io/helm-charts"
+  chart            = "kube-prometheus-stack"
+  namespace        = "monitoring"
+  create_namespace = true
+
+  set {
+    name  = "grafana.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName"
+    value = "gp3"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.resources.requests.memory"
+    value = "256Mi"
+  }
+}

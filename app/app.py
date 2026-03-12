@@ -3,6 +3,9 @@ from flask_mysqldb import MySQL
 import os
 import time
 import requests
+import signal
+import sys
+import socket
 
 app = Flask(__name__)
 
@@ -11,6 +14,8 @@ app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'mysql')
 app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'admin')
 app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'testdb')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'admin')
+
 
 mysql = MySQL(app)
 
@@ -49,19 +54,30 @@ def get_carbon_intensity():
         print(f"Error fetching carbon data: {e}")
     return "unknown"
 
+def handle_sigterm(sig, frame):
+    print("Received SIGTERM, shutting down gracefully...")
+    try:
+        mysql.connection.close()
+        print("MySQL connections closed.")
+    except Exception as e:
+        print(f"Error during cleanup: {e}")      
+    sys.exit(0)
+
+signal.signal(signal.SIGETERM, handle_sigterm)
+
 @app.route('/')
 def hello():
+    pod_name = socket.gethostname()
     intensity = get_carbon_intensity() 
     
     try:
-        cur = mysql.connection.cursor()
-        cur.execute('SELECT message FROM messages')
-        messages = cur.fetchall()
-        cur.close()
+        with mysql.connection.cursor() as cur:
+            cur.execute('SELECT message FROM messages')
+            messages = cur.fetchall()
         
-        return render_template('index.html', messages=messages, intensity=intensity)
+        return render_template('index.html', messages=messages, intensity=intensity, pod_name=pod_name)
     except Exception as e:
-        return render_template('index.html', messages=[], intensity=intensity, error=str(e))
+        return render_template('index.html', messages=[], intensity=intensity, pod_name=pod_name, error=str(e))
 
 
 @app.route('/submit', methods=['POST'])
@@ -75,9 +91,15 @@ def submit():
         return jsonify({'message': new_message})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 @app.route('/health')
 def health():
-    return "OK", 200
+    try:
+        with mysql.connection.cursor() as cur:
+            cur.exceute('SELECT 1')
+        return jsonify({"status": "healthy", "db": "connected"}), 200
+    except Exception:
+        return jsonify({"status": "unhealthy", "db":"disconnected"}), 500
 
 if __name__ == '__main__':
     # Initialize DB before starting the server

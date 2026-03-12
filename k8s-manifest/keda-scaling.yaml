@@ -1,0 +1,17 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: flask-app-scaler
+  namespace: flask-app
+spec:
+  scaleTargetRef:
+    name: flask-app 
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  pollingInterval: 30 
+  cooldownPeriod: 300 
+  triggers:
+  - type: external-push 
+    metadata:
+      scalerAddress: carbon-intensity-api:80
+      threshold: "50"

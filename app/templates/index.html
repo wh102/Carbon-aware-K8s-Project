@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prashant | Flask App 🚀</title>
+    <title>WH | Flask App 🚀</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
@@ -166,48 +166,51 @@
             <img src="1.png" alt="Prashant Photo">
         </div>
 
-        <!-- Content -->
-        <div class="content">
-            <div class="header">
-                <h1>W.Hussein | DevOps Enthusiast</h1>
-                <p> Aspiring Cloud & DevOps Engineer</p>
-            </div>
-<div class="about" style="text-align: center; border: 1px solid rgba(85, 153, 255, 0.3);">
-    {% if intensity == "low" or intensity == "very low" %}
-        <h3 style="color: #4ade80;">🌱 Grid Status: {{ intensity | upper }}</h3>
-        <p style="font-size: 0.8rem; color: #aaa;">Carbon-Aware Scaling: High-intensity tasks enabled.</p>
-    {% elif intensity == "high" or intensity == "very high" %}
-        <h3 style="color: #f87171;">⚠️ Grid Status: {{ intensity | upper }}</h3>
-        <p style="font-size: 0.8rem; color: #aaa;">Carbon-Aware Scaling: Running in low-power mode.</p>
-    {% else %}
-        <h3 style="color: #fbbf24;">⚙️ Grid Status: {{ intensity | upper }}</h3>
-        <p style="font-size: 0.8rem; color: #aaa;">Monitoring UK National Grid data...</p>
-    {% endif %}
-</div>
-
-
-            <div class="about">
-                <h2>About Me</h2>
-                <p>Hi, I'm <b>W</b> 👋, an aspiring Cloud & DevOps engineer.</p>
-                <p style="margin-top:10px;">
-                    <b>Project:</b> I have deployed a 2-tier Flask application (Flask + MySQL) on AWS EC2 using Docker.  
-                    I used Docker Compose to manage both containers with volumes and a custom network.  
-                    The source code is hosted on GitHub, and Jenkins is integrated to set up a CI/CD pipeline for automated deployment.
-                </p>
-            </div>
-
-            <div class="messages">
-                {% for message in messages %}
-                    <p>{{ message[0] }}</p>
-                {% endfor %}
-            </div>
-
-            <form id="messageForm">
-                <input type="text" name="new_message" placeholder="Type your message..." required>
-                <input type="submit" value="Send">
-            </form>
-        </div>
+<!-- Content -->
+<div class="content">
+    <div class="header">
+        <h1>W.Hussein | DevOps Enthusiast</h1>
+        <p> Aspiring Cloud & DevOps Engineer</p>
     </div>
+    <div class="about" style="text-align: center; border: 1px solid rgba(85, 153, 255, 0.3);">
+        {% if intensity == "low" or intensity == "very low" %}
+            <h3 style="color: #4ade80;">🌱 Grid Status: {{ intensity | upper }}</h3>
+            <p style="font-size: 0.8rem; color: #aaa;">Carbon-Aware Scaling: High-intensity tasks enabled.</p>
+        {% elif intensity == "high" or intensity == "very high" %}
+            <h3 style="color: #f87171;">⚠️ Grid Status: {{ intensity | upper }}</h3>
+            <p style="font-size: 0.8rem; color: #aaa;">Carbon-Aware Scaling: Running in low-power mode.</p>
+        {% else %}
+            <h3 style="color: #fbbf24;">⚙️ Grid Status: {{ intensity | upper }}</h3>
+            <p style="font-size: 0.8rem; color: #aaa;">Monitoring UK National Grid data...</p>
+        {% endif %}
+    </div>
+
+
+    <div class="about">
+        <h2>About Me</h2>
+        <p>Hi, I'm <b>W</b> 👋, an aspiring Cloud & DevOps engineer.</p>
+        <p style="margin-top:10px;">
+            <b>Project:</b> I have deployed a 2-tier <b>Carbon-Aware</b> application on <b>Amazon EKS (Kubernetes)</b>. 
+            It uses <b>KEDA</b> to scale replicas based on real-time UK National Grid intensity. 
+            The infrastructure is automated via <b>Terraform</b> and managed with <b>GitOps (ArgoCD)</b> for a true cloud-native lifecycle.
+        </p>
+    </div>
+
+    <div class="messages">
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+
+    <form id="messageForm">
+        <input type="text" name="new_message" placeholder="Type your message..." required>
+        <input type="submit" value="Send">
+    </form>
+        
+    <p style="font-size: 0.7rem; color: #555; text-align: right; margin-top: 10px;">
+        Server ID: {{ pod_name }}
+    </p>
+</div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
