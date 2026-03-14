@@ -77,7 +77,7 @@ resource "helm_release" "prometheus_stack" {
 
   set {
     name  = "grafana.enabled"
-    value = "true"
+    value = "false"
   }
 
   set {
@@ -87,7 +87,7 @@ resource "helm_release" "prometheus_stack" {
 
   set {
     name  = "prometheus.prometheusSpec.resources.requests.memory"
-    value = "256Mi"
+    value = "128Mi"
   }
 }
 
