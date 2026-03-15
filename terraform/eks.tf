@@ -36,46 +36,28 @@ module "eks" {
 
 
 
-  eks_managed_node_groups = {
+eks_managed_node_groups = {
     example = {
-
-      ami_type       = "AL2023_ARM_64_STANDARD"
+      ami_type       = "AL2_ARM_64" 
       instance_types = ["t4g.small"]
-      use_custom_launch_template = true
-      disable_bootstrap_user_data = true
+
+      bootstrap_extra_args = "--kubelet-extra-args '--max-pods=110'"
 
       pre_bootstrap_user_data = <<-EOT
-         MIME-Version: 1.0
-        Content-Type: multipart/mixed; boundary="=="
-
-        --==
-        Content-Type: application/node.eks.aws
-
-        kind: NodeConfig
-        apiVersion: node.eks.aws/v1alpha1
-        spec:
-          kubelet:
-            config:
-              maxPods: 110
-        --==--
+         export ENABLE_PREFIX_DELEGATION=true
+         export WARM_PREFIX_TARGET=1
       EOT
-
-      metadata_options = {
-        http_endpoint               = "enabled"
-        http_tokens                 = "required"
-        http_put_response_hop_limit = 1
-        instance_metadata_tags      = "disabled"
-      }
 
       min_size     = 2
       max_size     = 3
       desired_size = 2
-
+      
+      
       iam_role_additional_policies = {
         ebs_csi_policy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
     }
-  }
+}
 
   tags = {
     Environment = "dev"
