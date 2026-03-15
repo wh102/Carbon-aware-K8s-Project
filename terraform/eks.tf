@@ -13,6 +13,12 @@ module "eks" {
     kube-proxy = {}
     vpc-cni = {
       before_compute = true
+      configuration_values = jsonencode({
+        env = {
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
     }
     aws-ebs-csi-driver = {
       most_recent = true
@@ -35,6 +41,14 @@ module "eks" {
 
       ami_type       = "AL2023_ARM_64_STANDARD"
       instance_types = ["t4g.small"]
+      use_custom_launch_template = true
+
+      pre_bootstrap_user_data = <<-EOT
+        export ENABLE_PREFIX_DELEGATION=true
+        export WARM_PREFIX_TARGET=1
+      EOT
+
+      bootstrap_extra_args = "--kubelet-extra-args '--max-pods=110'"
 
       metadata_options = {
         http_endpoint               = "enabled"
