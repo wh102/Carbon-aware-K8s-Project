@@ -27,6 +27,8 @@ module "eks" {
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
+  endpoint_public_access = true
+
   enable_cluster_creator_admin_permissions = true
 
   vpc_id     = module.vpc.vpc_id
