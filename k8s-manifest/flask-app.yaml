@@ -20,7 +20,7 @@ spec:
         - containerPort: 5000
         
         livenessProbe:
-          http_get:
+          httpGet:
             path: /health
             port: 5000
           initialDelaySeconds: 5
