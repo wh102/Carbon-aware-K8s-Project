@@ -20,10 +20,8 @@ module "eks" {
         }
       })
     }
-    aws-ebs-csi-driver = {
-      most_recent = true
-    }
-  }
+   }
+    
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
@@ -32,7 +30,7 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.public_subnets
+  subnet_ids = module.vpc.private_subnets
 
 
 
@@ -40,6 +38,9 @@ eks_managed_node_groups = {
     example = {
       ami_type       = "AL2_ARM_64" 
       instance_types = ["t4g.small"]
+
+      iam_role_attach_cni_policy = true
+      associate_public_ip_address = false
 
       bootstrap_extra_args = "--kubelet-extra-args '--max-pods=110'"
 
@@ -78,6 +79,22 @@ module "load_balancer_controller_irsa_role" {
     ex = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
+    }
+  }
+}
+
+
+module "ebs_csi_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name             = "ebs-csi-controller-role"
+  attach_ebs_csi_policy = true 
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }
 }

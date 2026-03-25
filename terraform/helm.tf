@@ -6,7 +6,7 @@ resource "helm_release" "metrics_server" {
 
   set {
     name  = "args"
-    value = "{--kubelet-insecure-tls}"
+    value = "{--kubelet-insecure-tls,--kubelet-preferred-address-types=InternalIP}"
   }
 }
 
@@ -27,28 +27,14 @@ resource "helm_release" "keda" {
   namespace = kubernetes_namespace.keda.metadata[0].name
 }
 
-module "lb_controller_pod_identity" {
-  source  = "terraform-aws-modules/eks-pod-identity/aws"
-  version = "~> 1.0"
-
-  name = "aws-load-balancer-controller"
-
-  attach_aws_lb_controller_policy = true
-
-  associations = {
-    main = {
-      cluster_name    = module.eks.cluster_name
-      namespace       = "kube-system"
-      service_account = "aws-load-balancer-controller"
-    }
-  }
-}
 
 resource "helm_release" "aws_lb_controller" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
+
+  timeout = 900
 
   set {
     name  = "clusterName"
@@ -65,7 +51,22 @@ resource "helm_release" "aws_lb_controller" {
     value = "aws-load-balancer-controller"
   }
 
-  depends_on = [module.lb_controller_pod_identity]
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.load_balancer_controller_irsa_role.iam_role_arn
+  }
+
+  set {
+    name  = "vpcId"
+    value = module.vpc.vpc_id
+  }
+
+  set {
+    name  = "region"
+    value = var.aws_region # e.g. "eu-west-2"
+  }
+
+  depends_on = [module.load_balancer_controller_irsa_role]
 }
 
 resource "helm_release" "prometheus_stack" {
@@ -106,5 +107,30 @@ resource "helm_release" "kepler" {
   set {
     name  = "prometheus.enabled"
     value = "true"
+  }
+}
+
+resource "helm_release" "aws_ebs_csi_driver" {
+  name       = "aws-ebs-csi-driver"
+  repository = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+  chart      = "aws-ebs-csi-driver"
+  namespace  = "kube-system"
+
+  force_update  = true
+  recreate_pods = true
+
+  set {
+    name  = "controller.serviceAccount.create"
+    value = "true"
+  }
+
+  set {
+    name  = "controller.serviceAccount.name"
+    value = "ebs-csi-controller-sa"
+  }
+
+  set {
+    name  = "controller.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.ebs_csi_irsa_role.iam_role_arn
   }
 }

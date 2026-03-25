@@ -37,7 +37,7 @@ resource "kubernetes_secret" "argocd_repo_creds" {
 
   data = {
     type     = "git"
-    url      = "https://github.com/wh102/carbon-aware-k8s-project"
+    url      = "https://github.com/wh102/Carbon-aware-K8s-Project"
     password = var.github_token
     username = "wh102"
   }

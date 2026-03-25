@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: <YOUR_ECR_REPOSITORY_URL>:latest
+        image: 982166832404.dkr.ecr.eu-west-2.amazonaws.com/carbon-aware-k8s-project:latest
         ports:
         - container_port: 5000
         
