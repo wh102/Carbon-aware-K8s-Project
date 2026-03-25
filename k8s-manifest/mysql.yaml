@@ -38,11 +38,11 @@ spec:
         - name: MYSQL_DATABASE
           value: "testdb"
         ports:
-        - container_port: 3306
+        - containerPort: 3306
           name: mysql
         volumeMounts:
         - name: mysql-data
-          mount_path: /var/lib/mysql
+          mount_path: "/var/lib/mysql"
   
   volumeClaimTemplates:
   - metadata:

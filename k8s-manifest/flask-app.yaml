@@ -17,24 +17,24 @@ spec:
       - name: flask-app
         image: 982166832404.dkr.ecr.eu-west-2.amazonaws.com/carbon-aware-k8s-project:latest
         ports:
-        - container_port: 5000
+        - containerPort: 5000
         
-        liveness_probe:
+        livenessProbe:
           http_get:
             path: /health
             port: 5000
-          initial_delay_seconds: 5
-          period_seconds: 10
-        readiness_probe:
-          http_get:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
             path: /health
             port: 5000
-          initial_delay_seconds: 5
-          period_seconds: 5
+          initialDelaySeconds: 5
+          periodSeconds: 5
         env:
         - name: MYSQL_PASSWORD
           valueFrom:
-            secret_key_ref:
+            secretKeyRef:
               name: mysql-secret
               key: password
         - name: MYSQL_HOST
@@ -61,7 +61,7 @@ spec:
     app: flask-app
   ports:
   - port: 80
-    target_port: 5000
+    targetPort: 5000
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
