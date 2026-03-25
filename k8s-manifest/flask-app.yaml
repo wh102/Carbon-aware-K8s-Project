@@ -6,7 +6,7 @@ metadata:
 spec:
   replicas: 2
   selector:
-    match_labels:
+    matchLabels:
       app: flask-app
   template:
     metadata:
@@ -77,7 +77,7 @@ spec:
   - http:
       paths:
       - path: /
-        path_type: Prefix
+        pathType: Prefix
         backend:
           service:
             name: flask-app-service
