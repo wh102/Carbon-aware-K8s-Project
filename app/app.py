@@ -96,7 +96,7 @@ def submit():
 def health():
     try:
         with mysql.connection.cursor() as cur:
-            cur.exceute('SELECT 1')
+            cur.execute('SELECT 1')
         return jsonify({"status": "healthy", "db": "connected"}), 200
     except Exception:
         return jsonify({"status": "unhealthy", "db":"disconnected"}), 500
