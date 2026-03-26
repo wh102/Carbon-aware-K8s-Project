@@ -63,7 +63,7 @@ def handle_sigterm(sig, frame):
         print(f"Error during cleanup: {e}")      
     sys.exit(0)
 
-signal.signal(signal.SIGETERM, handle_sigterm)
+signal.signal(signal.SIGTERM, handle_sigterm)
 
 @app.route('/')
 def hello():
