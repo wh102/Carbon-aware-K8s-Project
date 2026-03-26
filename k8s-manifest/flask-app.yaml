@@ -4,7 +4,7 @@ metadata:
   name: flask-app
   namespace: flask-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: flask-app
@@ -16,6 +16,7 @@ spec:
       containers:
       - name: flask-app
         image: 982166832404.dkr.ecr.eu-west-2.amazonaws.com/carbon-aware-k8s-project:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         

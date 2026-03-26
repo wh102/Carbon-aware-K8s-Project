@@ -11,7 +11,8 @@ spec:
   pollingInterval: 30 
   cooldownPeriod: 300 
   triggers:
-  - type: external-push 
-    metadata:
-      scalerAddress: carbon-intensity-api:80
-      threshold: "50"
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        query: sum(kepler_node_package_joules_total)
+        threshold: '50'

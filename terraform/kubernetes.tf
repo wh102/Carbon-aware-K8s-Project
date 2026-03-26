@@ -14,22 +14,15 @@ resource "kubernetes_storage_class_v1" "gp3" {
   }
 }
 
-
-resource "kubernetes_secret" "mysql_secret" {
+resource "kubernetes_namespace" "argocd" {
   metadata {
-    name      = "mysql-secret"
-    namespace = kubernetes_namespace.flask_app.metadata[0].name
+    name = "argocd"
   }
-  data = {
-    password = var.db_password
-  }
-  type = "opaque"
 }
-
 resource "kubernetes_secret" "argocd_repo_creds" {
   metadata {
     name      = "private-repo-creds"
-    namespace = "argocd"
+    namespace = kubernetes_namespace.argocd.metadata[0].name
     labels = {
       "argocd.argoproj.io/secret-type" = "repository"
     }
@@ -41,4 +34,16 @@ resource "kubernetes_secret" "argocd_repo_creds" {
     password = var.github_token
     username = "wh102"
   }
+}
+
+
+resource "kubernetes_secret" "mysql_secret" {
+  metadata {
+    name      = "mysql-secret"
+    namespace = kubernetes_namespace.flask_app.metadata[0].name
+  }
+  data = {
+    password = var.db_password
+  }
+  type = "opaque"
 }
