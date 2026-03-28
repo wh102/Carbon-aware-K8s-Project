@@ -2,6 +2,7 @@ module "vpc" {
   source               = "terraform-aws-modules/vpc/aws"
   version              = "5.5.0"
   enable_dns_hostnames = true
+  enable_dns_support = true
 
   name = "vpc-cak8s"
   cidr = var.vpc_cidr
@@ -19,11 +20,56 @@ module "vpc" {
     "kubernetes.io/cluster/${var.project_name}" = "shared"
   }
 
-  single_nat_gateway = true
-  enable_nat_gateway = true
+  single_nat_gateway = false
+  enable_nat_gateway = false
 
   tags = {
     Terraform   = "true"
     Environment = "dev"
   }
+}
+
+resource "aws_vpc_endpoint" "ec2" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.aws_region}.ec2"
+  vpc_endpoint_type = "Interface"
+
+  subnet_ids          = module.vpc.private_subnets
+  security_group_ids  = [module.eks.node_security_group_id]
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.aws_region}.ecr.api"
+  vpc_endpoint_type = "Interface"
+  subnet_ids          = module.vpc.private_subnets
+  security_group_ids  = [module.eks.node_security_group_id]
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.aws_region}.ecr.dkr"
+  vpc_endpoint_type = "Interface"
+  subnet_ids          = module.vpc.private_subnets
+  security_group_ids  = [module.eks.node_security_group_id]
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = module.vpc.private_route_table_ids
+}
+
+
+resource "aws_security_group_rule" "nodes_to_endpoints" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = module.eks.node_security_group_id
+  source_security_group_id = module.eks.node_security_group_id
 }

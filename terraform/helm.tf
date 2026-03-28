@@ -118,7 +118,8 @@ resource "helm_release" "aws_ebs_csi_driver" {
 
   force_update  = true
   recreate_pods = true
-
+  wait = false
+  
   set {
     name  = "controller.serviceAccount.create"
     value = "true"
