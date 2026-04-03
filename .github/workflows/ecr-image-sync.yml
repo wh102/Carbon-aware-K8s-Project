@@ -28,12 +28,12 @@ jobs:
 
       - name: Pull and Push ARM64 Images
         run: |
-          # Metrics Server
+          echo "=== Metrics Server ==="
           docker pull registry.k8s.io/metrics-server/metrics-server:v0.8.0
           docker tag registry.k8s.io/metrics-server/metrics-server:v0.8.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
 
-          # KEDA
+          echo "=== KEDA ==="
           docker pull ghcr.io/kedacore/keda:v2.13.0
           docker tag ghcr.io/kedacore/keda:v2.13.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.13.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.13.0
@@ -42,21 +42,21 @@ jobs:
           docker tag ghcr.io/kedacore/keda-metrics-apiserver:v2.13.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.13.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.13.0
 
-          # Prometheus
+          echo "=== Prometheus ==="
           docker pull quay.io/prometheus/prometheus:v2.50.0
           docker tag quay.io/prometheus/prometheus:v2.50.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
 
-          docker pull quay.io/prometheus-operator/prometheus-operator:v0.73.0
-          docker tag quay.io/prometheus-operator/prometheus-operator:v0.73.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.73.0
-          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.73.0
+          docker pull quay.io/prometheus-operator/prometheus-operator:v0.60.1
+          docker tag quay.io/prometheus-operator/prometheus-operator:v0.60.1 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.60.1
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.60.1
 
-          # Kepler
+          echo "=== Kepler ==="
           docker pull quay.io/sustainable-computing-io/kepler:v1.3.0
           docker tag quay.io/sustainable-computing-io/kepler:v1.3.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v1.3.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v1.3.0
 
-          # EBS CSI Driver
+          echo "=== EBS CSI Driver ==="
           docker pull registry.k8s.io/sig-storage/csi-provisioner:v3.6.0
           docker tag registry.k8s.io/sig-storage/csi-provisioner:v3.6.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-provisioner:v3.6.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-provisioner:v3.6.0
@@ -77,7 +77,7 @@ jobs:
           docker tag registry.k8s.io/sig-storage/livenessprobe:v2.12.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/livenessprobe:v2.12.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/livenessprobe:v2.12.0
 
-          # AWS Load Balancer Controller
-          docker pull public.ecr.aws/eks/aws-load-balancer-controller:v2.7.1
-          docker tag public.ecr.aws/eks/aws-load-balancer-controller:v2.7.1 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.7.1
-          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.7.1
+          echo "=== AWS Load Balancer Controller ==="
+          docker pull public.ecr.aws/eks/aws-load-balancer-controller:v2.7.2
+          docker tag public.ecr.aws/eks/aws-load-balancer-controller:v2.7.2 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.7.2
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.7.2
