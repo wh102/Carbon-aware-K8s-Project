@@ -34,13 +34,13 @@ jobs:
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
 
           echo "=== KEDA ==="
-          docker pull ghcr.io/kedacore/keda:v2.13.0
-          docker tag ghcr.io/kedacore/keda:v2.13.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.13.0
-          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.13.0
+          docker pull ghcr.io/kedacore/keda:v2.18.3
+          docker tag ghcr.io/kedacore/keda:v2.18.3 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.18.3
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.18.3
 
-          docker pull ghcr.io/kedacore/keda-metrics-apiserver:v2.13.0
-          docker tag ghcr.io/kedacore/keda-metrics-apiserver:v2.13.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.13.0
-          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.13.0
+          docker pull ghcr.io/kedacore/keda-metrics-apiserver:v2.18.3
+          docker tag ghcr.io/kedacore/keda-metrics-apiserver:v2.18.3 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.18.3
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.18.3
 
           echo "=== Prometheus ==="
           docker pull quay.io/prometheus/prometheus:v2.50.0
