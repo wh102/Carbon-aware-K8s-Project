@@ -1,0 +1,57 @@
+name: ECR Image Sync
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  sync-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to AWS ECR
+        run: |
+          aws ecr get-login-password \
+            --region ${{ secrets.AWS_REGION }} | \
+            docker login \
+            --username AWS \
+            --password-stdin 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Pull and Push ARM64 Images
+        run: |
+          # Metrics Server
+          docker pull public.ecr.aws/k8s-artifacts/metrics-server/metrics-server:v0.8.0
+          docker tag public.ecr.aws/k8s-artifacts/metrics-server/metrics-server:v0.8.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
+
+          # KEDA
+          docker pull ghcr.io/kedacore/keda:v2.13.0
+          docker tag ghcr.io/kedacore/keda:v2.13.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.13.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:v2.13.0
+
+          docker pull ghcr.io/kedacore/keda-metrics-apiserver:v2.13.0
+          docker tag ghcr.io/kedacore/keda-metrics-apiserver:v2.13.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.13.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.13.0
+
+          # Prometheus
+          docker pull quay.io/prometheus/prometheus:v2.50.0
+          docker tag quay.io/prometheus/prometheus:v2.50.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
+
+          docker pull quay.io/prometheus-operator/prometheus-operator:v0.73.0
+          docker tag quay.io/prometheus-operator/prometheus-operator:v0.73.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.73.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.73.0
+
+          # Kepler
+          docker pull quay.io/sustainable-computing-io/kepler:v1.3.0
+          docker tag quay.io/sustainable-computing-io/kepler:v1.3.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v1.3.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v1.3.0
