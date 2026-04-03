@@ -43,16 +43,16 @@ jobs:
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:v2.13.0
 
           # Prometheus
-          docker pull --platform linux/arm64 quay.io/prometheus/prometheus:v2.50.0
+          docker pull quay.io/prometheus/prometheus:v2.50.0
           docker tag quay.io/prometheus/prometheus:v2.50.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
 
-          docker pull --platform linux/arm64 quay.io/prometheus-operator/prometheus-operator:v0.73.0
+          docker pull quay.io/prometheus-operator/prometheus-operator:v0.73.0
           docker tag quay.io/prometheus-operator/prometheus-operator:v0.73.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.73.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.73.0
 
           # Kepler
-          docker pull --platform linux/arm64 quay.io/sustainable-computing-io/kepler:v1.3.0
+          docker pull quay.io/sustainable-computing-io/kepler:v1.3.0
           docker tag quay.io/sustainable-computing-io/kepler:v1.3.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v1.3.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v1.3.0
 
