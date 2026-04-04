@@ -47,13 +47,13 @@ jobs:
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-admission-webhooks:2.18.3
 
           echo "=== Prometheus ==="
-          docker pull quay.io/prometheus/prometheus:v2.50.0
-          docker tag quay.io/prometheus/prometheus:v2.50.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
-          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.50.0
+          docker pull quay.io/prometheus/prometheus:v2.52.0
+          docker tag quay.io/prometheus/prometheus:v2.52.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.52.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.52.0
 
-          docker pull quay.io/prometheus-operator/prometheus-operator:v0.60.1
-          docker tag quay.io/prometheus-operator/prometheus-operator:v0.60.1 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.60.1
-          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.60.1
+          docker pull quay.io/prometheus-operator/prometheus-operator:v0.75.0
+          docker tag quay.io/prometheus-operator/prometheus-operator:v0.75.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.75.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.75.0
 
           echo "=== Kepler ==="
           docker pull quay.io/sustainable_computing_io/kepler:v0.11.4
@@ -61,6 +61,10 @@ jobs:
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
 
           echo "=== EBS CSI Driver ==="
+          docker pull public.ecr.aws/eks/aws-ebs-csi-driver:v1.31.0
+          docker tag public.ecr.aws/eks/aws-ebs-csi-driver:v1.31.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.31.0
+          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.31.0
+
           docker pull registry.k8s.io/sig-storage/csi-provisioner:v5.2.0
           docker tag registry.k8s.io/sig-storage/csi-provisioner:v5.2.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-provisioner:v5.2.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-provisioner:v5.2.0
