@@ -56,8 +56,8 @@ jobs:
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.60.1
 
           echo "=== Kepler ==="
-          docker pull quay.io/sustainable-computing-io/kepler:v0.11.4
-          docker tag quay.io/sustainable-computing-io/kepler:v0.11.4 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
+          docker pull quay.io/sustainable_computing_io/kepler:v0.11.4
+          docker tag quay.io/sustainable_computing_io/kepler:v0.11.4 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
 
           echo "=== EBS CSI Driver ==="
