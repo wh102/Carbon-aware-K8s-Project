@@ -62,7 +62,7 @@ jobs:
 
           echo "=== EBS CSI Driver ==="
           docker pull public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.31.0
-          docker tag ppublic.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.31.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.31.0
+          docker tag public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.31.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.31.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.31.0
 
           docker pull registry.k8s.io/sig-storage/csi-provisioner:v5.2.0
