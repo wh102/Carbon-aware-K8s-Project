@@ -29,63 +29,63 @@ jobs:
       - name: Pull and Push ARM64 Images
         run: |
           echo "=== Metrics Server ==="
-          docker pull registry.k8s.io/metrics-server/metrics-server:v0.8.0
+          docker pull --platform linux/arm64 registry.k8s.io/metrics-server/metrics-server:v0.8.0
           docker tag registry.k8s.io/metrics-server/metrics-server:v0.8.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
 
           echo "=== KEDA ==="
-          docker pull ghcr.io/kedacore/keda:2.18.3
+          docker pull --platform linux/arm64 ghcr.io/kedacore/keda:2.18.3
           docker tag ghcr.io/kedacore/keda:2.18.3 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:2.18.3
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda:2.18.3
 
-          docker pull ghcr.io/kedacore/keda-metrics-apiserver:2.18.3
+          docker pull --platform linux/arm64 ghcr.io/kedacore/keda-metrics-apiserver:2.18.3
           docker tag ghcr.io/kedacore/keda-metrics-apiserver:2.18.3 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:2.18.3
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-metrics-apiserver:2.18.3
 
-          docker pull ghcr.io/kedacore/keda-admission-webhooks:2.18.3
+          docker pull --platform linux/arm64 ghcr.io/kedacore/keda-admission-webhooks:2.18.3
           docker tag ghcr.io/kedacore/keda-admission-webhooks:2.18.3 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-admission-webhooks:2.18.3
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-admission-webhooks:2.18.3
 
           echo "=== Prometheus ==="
-          docker pull quay.io/prometheus/prometheus:v2.52.0
+          docker pull --platform linux/arm64 quay.io/prometheus/prometheus:v2.52.0
           docker tag quay.io/prometheus/prometheus:v2.52.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.52.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus:v2.52.0
 
-          docker pull quay.io/prometheus-operator/prometheus-operator:v0.75.0
+          docker pull --platform linux/arm64 quay.io/prometheus-operator/prometheus-operator:v0.75.0
           docker tag quay.io/prometheus-operator/prometheus-operator:v0.75.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.75.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.75.0
 
           echo "=== Kepler ==="
-          docker pull quay.io/sustainable_computing_io/kepler:v0.11.4
+          docker pull --platform linux/arm64 quay.io/sustainable_computing_io/kepler:v0.11.4
           docker tag quay.io/sustainable_computing_io/kepler:v0.11.4 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
 
           echo "=== EBS CSI Driver ==="
-          docker pull public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.31.0
+          docker pull --platform linux/arm64 public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.31.0
           docker tag public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.31.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.31.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.31.0
 
-          docker pull registry.k8s.io/sig-storage/csi-provisioner:v5.2.0
+          docker pull --platform linux/arm64 registry.k8s.io/sig-storage/csi-provisioner:v5.2.0
           docker tag registry.k8s.io/sig-storage/csi-provisioner:v5.2.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-provisioner:v5.2.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-provisioner:v5.2.0
           
-          docker pull registry.k8s.io/sig-storage/csi-attacher:v4.8.0
+          docker pull --platform linux/arm64 registry.k8s.io/sig-storage/csi-attacher:v4.8.0
           docker tag registry.k8s.io/sig-storage/csi-attacher:v4.8.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-attacher:v4.8.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-attacher:v4.8.0
           
-          docker pull registry.k8s.io/sig-storage/csi-resizer:v1.13.2
+          docker pull --platform linux/arm64 registry.k8s.io/sig-storage/csi-resizer:v1.13.2
           docker tag registry.k8s.io/sig-storage/csi-resizer:v1.13.2 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-resizer:v1.13.2
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-resizer:v1.13.2
           
-          docker pull registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0
+          docker pull --platform linux/arm64 registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0
           docker tag registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-snapshotter:v8.2.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-snapshotter:v8.2.0
           
-          docker pull registry.k8s.io/sig-storage/livenessprobe:v2.15.0
+          docker pull --platform linux/arm64 registry.k8s.io/sig-storage/livenessprobe:v2.15.0
           docker tag registry.k8s.io/sig-storage/livenessprobe:v2.15.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/livenessprobe:v2.15.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/livenessprobe:v2.15.0
 
           echo "=== AWS Load Balancer Controller ==="
-          docker pull public.ecr.aws/eks/aws-load-balancer-controller:v2.17.0
+          docker pull --platform linux/arm64 public.ecr.aws/eks/aws-load-balancer-controller:v2.17.0
           docker tag public.ecr.aws/eks/aws-load-balancer-controller:v2.17.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.17.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.17.0
