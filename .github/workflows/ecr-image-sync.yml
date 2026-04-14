@@ -26,8 +26,12 @@ jobs:
             --username AWS \
             --password-stdin 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Pull and Push ARM64 Images
         run: |
+          set -e
           echo "=== Metrics Server ==="
           docker pull --platform linux/arm64 registry.k8s.io/metrics-server/metrics-server:v0.8.0
           docker tag registry.k8s.io/metrics-server/metrics-server:v0.8.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/k8s-metrics-server:v0.8.0
@@ -54,11 +58,6 @@ jobs:
           docker pull --platform linux/arm64 quay.io/prometheus-operator/prometheus-operator:v0.75.0
           docker tag quay.io/prometheus-operator/prometheus-operator:v0.75.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.75.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-operator:v0.75.0
-
-          echo "=== Kepler ==="
-          docker pull --platform linux/arm64 quay.io/sustainable_computing_io/kepler:v0.11.4
-          docker tag quay.io/sustainable_computing_io/kepler:v0.11.4 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
-          docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.11.4
 
           echo "=== EBS CSI Driver ==="
           docker pull --platform linux/arm64 public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.31.0
@@ -89,3 +88,19 @@ jobs:
           docker pull --platform linux/arm64 public.ecr.aws/eks/aws-load-balancer-controller:v2.17.0
           docker tag public.ecr.aws/eks/aws-load-balancer-controller:v2.17.0 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.17.0
           docker push 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-load-balancer-controller:v2.17.0
+
+
+      - name: Build and push Kepler ARM64
+        run: |
+          set -e
+          echo "=== Kepler ==="
+          git clone --depth 1 https://github.com/sustainable-computing-io/kepler.git
+          cd kepler
+
+          docker buildx build \
+            --platform linux/arm64 \
+            -t 982166832404.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:arm64 \
+            --build-arg GIT_COMMIT=$(git rev-parse HEAD) \
+            --build-arg GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) \
+            --build-arg VERSION=v0.11.4 \
+            --push .
