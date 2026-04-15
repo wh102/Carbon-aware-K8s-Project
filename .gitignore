@@ -2,3 +2,5 @@
 *.tfstate
 *.tfvars
 .env
+kepler/
+terraform/kepler

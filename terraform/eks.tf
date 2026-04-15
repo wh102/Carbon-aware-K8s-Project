@@ -5,14 +5,21 @@ module "eks" {
   name               = "cluster-cak8s"
   kubernetes_version = "1.31"
 
+
   addons = {
-    coredns = {}
-    eks-pod-identity-agent = {
-      before_compute = true
+    coredns = {
+      # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/eks/coredns"
     }
-    kube-proxy = {}
+    eks-pod-identity-agent = {
+      before_compute   = true
+      # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/eks/pod-identity-agent"
+    }
+    kube-proxy = {
+      # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/eks/kube-proxy"
+    }
     vpc-cni = {
-      before_compute = true
+      before_compute   = true
+      # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/amazon-k8s-cni"
       configuration_values = jsonencode({
         env = {
           ENABLE_PREFIX_DELEGATION = "true"
@@ -20,11 +27,12 @@ module "eks" {
         }
       })
     }
-   }
+  }
     
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
+  endpoint_private_access = true
   endpoint_public_access = true
 
   enable_cluster_creator_admin_permissions = true
@@ -97,4 +105,38 @@ module "ebs_csi_irsa_role" {
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "node_ecr_power" {
+  depends_on = [module.eks]
+
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+  role       = module.eks.eks_managed_node_groups["example"].iam_role_name
+}
+
+resource "aws_iam_policy" "ecr_sync" {
+  name        = "ECRSyncPolicy"
+  description = "Allows nodes to create pull-through repositories"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ecr:CreateRepository",
+          "ecr:BatchImportUpstreamImage",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "node_ecr_sync" {
+  depends_on = [module.eks]
+
+  policy_arn = aws_iam_policy.ecr_sync.arn
+  role       = module.eks.eks_managed_node_groups["example"].iam_role_name
 }
