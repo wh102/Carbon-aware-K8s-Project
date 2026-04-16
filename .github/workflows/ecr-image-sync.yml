@@ -108,9 +108,9 @@ jobs:
           docker tag registry.k8s.io/sig-storage/csi-resizer:v1.13.2 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-resizer:v1.13.2
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-resizer:v1.13.2
       
-          docker pull --platform linux/arm64 registry.k8s.io/sig-storage/csi-snapshotter:v8.2.2
-          docker tag registry.k8s.io/sig-storage/csi-snapshotter:v8.2.2 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-snapshotter:v8.2.2
-          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-snapshotter:v8.2.2
+          docker pull --platform linux/arm64 registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0
+          docker tag registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-snapshotter:v8.2.0
+          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/csi-snapshotter:v8.2.0
           
           docker pull --platform linux/arm64 registry.k8s.io/sig-storage/livenessprobe:v2.15.0
           docker tag registry.k8s.io/sig-storage/livenessprobe:v2.15.0 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/livenessprobe:v2.15.0
