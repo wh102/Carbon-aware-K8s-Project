@@ -92,8 +92,8 @@ jobs:
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/prometheus-config-reloader:v0.90.1
 
           echo "=== EBS CSI Driver ==="
-          docker pull --platform linux/arm64 public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.58.0
-          docker tag public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.58.0 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.58.0
+          docker pull --platform linux/arm64 registry.k8s.io/provider-aws/aws-ebs-csi-driver:v1.58.0
+          docker tag registry.k8s.io/provider-aws/aws-ebs-csi-driver:v1.58.0 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.58.0
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/aws-ebs-csi-driver:v1.58.0
 
           docker pull --platform linux/arm64 registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.16.0
