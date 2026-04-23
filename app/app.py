@@ -6,15 +6,17 @@ import requests
 import signal
 import sys
 import socket
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# 1. Database Configuration (Uses Docker container name 'mysql' as default)
+# 1. Database Configuration
 app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'mysql')
 app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'admin')
 app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'testdb')
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'admin')
 
 
 mysql = MySQL(app)
@@ -33,34 +35,43 @@ def init_db():
                 ''')
                 mysql.connection.commit()  
                 cur.close()
-            print("Successfully connected to MySQL and initialized DB!")
+            logger.info("Successfully connected...")
             return True
         except Exception as e:
-            print(f"Waiting for MySQL... (Attempt {i+1}/10). Error: {e}")
+            logger.warning(f"Waiting for MySQL... (Attempt {i+1}/10). Error: {e}")
             time.sleep(5)
     return False
     
-def get_carbon_intensity():
-    try:
-        url = "https://api.carbonintensity.org.uk/intensity"
-        headers = {'Accept': 'application/json'}
-        
-        response = requests.get(url, headers=headers, timeout=5)
-        
-        if response.status_code == 200:
-            data = response.json()
-            return data['data'][0]['intensity']['index']
-    except Exception as e:
-        print(f"Error fetching carbon data: {e}")
-    return "unknown"
+last_intensity = "unknown"
+last_fetch_time = 0
+CACHE_DURATION = 60  # seconds
+
+def get_cached_carbon_intensity():
+    global last_intensity, last_fetch_time
+    
+    now = time.time()
+    
+    if now - last_fetch_time > CACHE_DURATION:
+        try:
+            url = "https://api.carbonintensity.org.uk/intensity"
+            response = requests.get(url, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                last_intensity = data['data'][0]['intensity']['index']
+                last_fetch_time = now
+        except Exception as e:
+            logger.error(f"Carbon API error: {e}")
+    
+    return last_intensity
 
 def handle_sigterm(sig, frame):
-    print("Received SIGTERM, shutting down gracefully...")
+    logger.info("Received SIGTERM, shutting down gracefully...")
     try:
         mysql.connection.close()
-        print("MySQL connections closed.")
+        logger.info("MySQL connections closed.")
     except Exception as e:
-        print(f"Error during cleanup: {e}")      
+        logger.error(f"Error during cleanup: {e}")      
     sys.exit(0)
 
 signal.signal(signal.SIGTERM, handle_sigterm)
@@ -68,7 +79,7 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 @app.route('/')
 def hello():
     pod_name = socket.gethostname()
-    intensity = get_carbon_intensity() 
+    intensity = get_cached_carbon_intensity() 
     
     try:
         with mysql.connection.cursor() as cur:
@@ -94,13 +105,25 @@ def submit():
 
 @app.route('/health')
 def health():
-    try:
-        with mysql.connection.cursor() as cur:
-            cur.execute('SELECT 1')
-        return jsonify({"status": "healthy", "db": "connected"}), 200
-    except Exception:
-        return jsonify({"status": "unhealthy", "db":"disconnected"}), 500
+    return "OK", 200
+
+def check_db_connection(retries=3, delay=1):
+    for i in range(retries):
+        try:
+            with mysql.connection.cursor() as cur:
+                cur.execute('SELECT 1')
+            return True
+        except Exception as e:
+            time.sleep(delay)
+    return False
+
+@app.route('/ready')
+def ready():
+    if check_db_connection():
+        return jsonify({"status": "ready"}), 200
+    return jsonify({"status": "not ready"}), 500
 
 if __name__ == '__main__':
-    init_db()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    if not init_db():
+        sys.exit(1)
+    app.run(host='0.0.0.0', port=5000)
