@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 from flask_mysqldb import MySQL
+from prometheus_client import Gauge
+from prometheus_client import make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
 import os
 import time
 import requests
@@ -7,6 +10,7 @@ import signal
 import sys
 import socket
 import logging
+import threading
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -20,6 +24,8 @@ app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'testdb')
 
 
 mysql = MySQL(app)
+
+carbon_intensity_gauge = Gauge('carbon_intensity', 'UK carbon intensity')
 
 # 2. Database Initialization with Retry Loop (Crucial for t3.micro)
 def init_db():
@@ -42,9 +48,9 @@ def init_db():
             time.sleep(5)
     return False
     
-last_intensity = "unknown"
+last_intensity = 0
 last_fetch_time = 0
-CACHE_DURATION = 60  # seconds
+CACHE_DURATION = 60  
 
 def get_cached_carbon_intensity():
     global last_intensity, last_fetch_time
@@ -58,12 +64,24 @@ def get_cached_carbon_intensity():
             
             if response.status_code == 200:
                 data = response.json()
-                last_intensity = data['data'][0]['intensity']['index']
+                value = data['data'][0]['intensity']['actual']
+                last_intensity = value
+                carbon_intensity_gauge.set(value)
                 last_fetch_time = now
         except Exception as e:
             logger.error(f"Carbon API error: {e}")
     
     return last_intensity
+
+def update_carbon_loop():
+    while True:
+        get_cached_carbon_intensity()
+        time.sleep(60)
+
+
+app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    '/metrics': make_wsgi_app()
+})
 
 def handle_sigterm(sig, frame):
     logger.info("Received SIGTERM, shutting down gracefully...")
@@ -120,9 +138,20 @@ def check_db_connection(retries=5, delay=2):
 
 @app.route('/ready')
 def ready():
-    return jsonify({"status": "ready"}), 200
+    if check_db_connection():
+        return jsonify({"status": "ready"}), 200
+    return jsonify({"status": "not ready"}), 500
+
+def start_background_thread():
+    thread = threading.Thread(target=update_carbon_loop, daemon=True)
+    thread.start()
+
+@app.before_first_request
+def initialize():
+    start_background_thread()
 
 if __name__ == '__main__':
     if not init_db():
         sys.exit(1)
+    start_background_thread()
     app.run(host='0.0.0.0', port=5000)
