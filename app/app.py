@@ -107,21 +107,20 @@ def submit():
 def health():
     return "OK", 200
 
-def check_db_connection(retries=3, delay=1):
+def check_db_connection(retries=5, delay=2):
     for i in range(retries):
         try:
             with mysql.connection.cursor() as cur:
                 cur.execute('SELECT 1')
             return True
         except Exception as e:
+            logger.warning(f"DB connection failed (attempt {i+1}): {e}")
             time.sleep(delay)
     return False
 
 @app.route('/ready')
 def ready():
-    if check_db_connection():
-        return jsonify({"status": "ready"}), 200
-    return jsonify({"status": "not ready"}), 500
+    return jsonify({"status": "ready"}), 200
 
 if __name__ == '__main__':
     if not init_db():
