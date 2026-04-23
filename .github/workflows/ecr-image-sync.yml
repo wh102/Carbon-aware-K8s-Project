@@ -52,9 +52,9 @@ jobs:
           docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/keda-admission-webhooks:2.18.3
 
           echo "=== KEPLER ==="
-          docker pull --platform linux/arm64 quay.io/sustainable_computing_io/kepler:v0.8.0
-          docker tag quay.io/sustainable_computing_io/kepler:v0.8.0 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.8.0
-          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:v0.8.0
+          docker pull --platform linux/arm64 quay.io/sustainable_computing_io/kepler:release-0.8.0
+          docker tag quay.io/sustainable_computing_io/kepler:release-0.8.0 ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:release-0.8.0
+          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/kepler:release-0.8.0
 
           echo "=== Grafana ==="
           docker pull --platform linux/arm64 docker.io/grafana/grafana:12.4.3
