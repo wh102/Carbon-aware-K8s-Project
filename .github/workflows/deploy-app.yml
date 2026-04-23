@@ -3,8 +3,6 @@ name: Build and Push Flask App
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'app/**' 
   workflow_dispatch:
 
 jobs:
