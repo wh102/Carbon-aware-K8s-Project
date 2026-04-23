@@ -143,15 +143,9 @@ def ready():
     return jsonify({"status": "not ready"}), 500
 
 def start_background_thread():
-    thread = threading.Thread(target=update_carbon_loop, daemon=True)
-    thread.start()
+    if not hasattr(app, "carbon_thread_started"):
+        thread = threading.Thread(target=update_carbon_loop, daemon=True)
+        thread.start()
+        app.carbon_thread_started = True
 
-@app.before_first_request
-def initialize():
-    start_background_thread()
-
-if __name__ == '__main__':
-    if not init_db():
-        sys.exit(1)
-    start_background_thread()
-    app.run(host='0.0.0.0', port=5000)
+start_background_thread()
