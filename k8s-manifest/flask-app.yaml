@@ -13,6 +13,7 @@ spec:
       labels:
         app: flask-app
     spec:
+      terminationGracePeriodSeconds: 30
       imagePullSecrets:
         - name: ecr-secret
       containers:
@@ -21,21 +22,29 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
-          
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            failureThreshold: 30
+            periodSeconds: 2
           livenessProbe:
             httpGet:
               path: /health
               port: 5000
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
             periodSeconds: 15
+            timeoutSeconds: 2
           readinessProbe:
             httpGet:
               path: /ready
               port: 5000
-            initialDelaySeconds: 40
+            initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
-            failureThreshold: 5
+            failureThreshold: 3
+            
           env:
             - name: MYSQL_PASSWORD
               valueFrom:
