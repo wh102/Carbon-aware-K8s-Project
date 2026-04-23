@@ -102,6 +102,5 @@ def health():
         return jsonify({"status": "unhealthy", "db":"disconnected"}), 500
 
 if __name__ == '__main__':
-    # Initialize DB before starting the server
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -13,44 +13,46 @@ spec:
       labels:
         app: flask-app
     spec:
+      imagePullSecrets:
+        - name: ecr-secret
       containers:
-      - name: flask-app
-        image: 982166832404.dkr.ecr.eu-west-2.amazonaws.com/carbon-aware-k8s-project:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 5000
-        
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 5000
-          initialDelaySeconds: 10
-          periodSeconds: 15
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 5000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        env:
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
-        - name: MYSQL_HOST
-          value: "mysql"
-        - name: MYSQL_DB
-          value: "testdb"
+        - name: flask-app
+          image: 982166832404.dkr.ecr.eu-west-2.amazonaws.com/carbon-aware-k8s-project:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+            - name: MYSQL_HOST
+              value: "mysql"
+            - name: MYSQL_DB
+              value: "testdb"
 
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "250m"
-            memory: "256Mi"
----
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+  ---
 apiVersion: v1
 kind: Service
 metadata:

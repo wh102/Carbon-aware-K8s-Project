@@ -1,12 +1,16 @@
 resource "helm_release" "metrics_server" {
   name       = "metrics-server"
   namespace  = "kube-system"
-  repository = "https://kubernetes-sigs.github.io/metrics-server"
-  chart      = "metrics-server"
-  wait = false
+  repository = "https://kubernetes-sigs.github.io/metrics-server" 
+  chart = "metrics-server"
+  wait = true
   set {
-    name  = "args"
-    value = "{--kubelet-insecure-tls,--kubelet-preferred-address-types=InternalIP}"
+    name  = "args[0]"
+    value = "--kubelet-insecure-tls"
+  }
+  set {
+    name  = "args[1]"
+    value = "--kubelet-preferred-address-types=InternalIP"
   }
   set {
     name  = "image.repository"
@@ -33,26 +37,47 @@ resource "helm_release" "keda" {
 
   namespace = kubernetes_namespace.keda.metadata[0].name
 
+  depends_on = [helm_release.aws_lb_controller, helm_release.metrics_server]
+
   set {
     name  = "image.keda.repository"
     value = aws_ecr_repository.keda.repository_url
-  }
-  set {
-    name  = "image.metricsAdapter.repository"
-    value = aws_ecr_repository.keda_metrics_adapter.repository_url
   }
   set {
     name  = "image.keda.tag"
     value = "2.18.3"
   }
   set {
-    name  = "image.metricsApiServer.tag"
+    name  = "image.keda.registry"
+    value = ""
+  }
+
+  set {
+    name  = "image.metricsAdapter.repository"
+    value = aws_ecr_repository.keda_metrics_adapter.repository_url
+  }
+  set {
+    name  = "image.metricsAdapter.tag"
     value = "2.18.3"
+  }
+  set {
+    name  = "image.metricsAdapter.registry"
+    value = ""
+  }
+
+  set {
+    name  = "image.webhooks.repository"
+    value = aws_ecr_repository.keda_admission_webhooks.repository_url
   }
   set {
     name  = "image.webhooks.tag"
     value = "2.18.3"
   }
+  set {
+    name  = "image.webhooks.registry"
+    value = ""
+  }
+
 }
 
 
@@ -61,8 +86,8 @@ resource "helm_release" "aws_lb_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  wait       = false
-  timeout    = 900
+  wait       = true
+  timeout    = 600
 
   set {
     name  = "clusterName"
@@ -95,12 +120,23 @@ resource "helm_release" "aws_lb_controller" {
   }
 
   depends_on = [module.load_balancer_controller_irsa_role]
-  
+
   set {
     name  = "image.repository"
     value = aws_ecr_repository.aws_load_balancer_controller.repository_url
   }
+
+  set {
+    name  = "image.tag"
+    value = "v2.17.0"
+  }
   
+}
+
+data "aws_caller_identity" "current" {}
+
+locals {
+  ecr_registry = "${data.aws_caller_identity.current.account_id}.dkr.ecr.eu-west-2.amazonaws.com"
 }
 
 resource "helm_release" "prometheus_stack" {
@@ -109,11 +145,47 @@ resource "helm_release" "prometheus_stack" {
   chart            = "kube-prometheus-stack"
   namespace        = "monitoring"
   create_namespace = true
-  wait             = false
-  
+  wait             = true
+  timeout          = 900
+
+  depends_on = [
+    helm_release.aws_lb_controller,
+    helm_release.metrics_server
+  ]
+
   set {
     name  = "grafana.enabled"
-    value = "false"
+    value = "true"
+  }
+
+  set {
+    name  = "grafana.image.registry"
+    value = local.ecr_registry
+  }
+
+  set {
+    name  = "grafana.image.repository"
+    value = aws_ecr_repository.grafana.name
+  }
+
+  set {
+    name  = "grafana.image.tag"
+    value = "12.4.3"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.image.registry"
+    value = local.ecr_registry
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.image.repository"
+    value = aws_ecr_repository.prometheus.name
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.image.tag"
+    value = "v3.11.2"
   }
 
   set {
@@ -127,32 +199,113 @@ resource "helm_release" "prometheus_stack" {
   }
 
   set {
-    name  = "prometheus.prometheusSpec.image.repository"
-    value = aws_ecr_repository.prometheus.repository_url
+    name  = "prometheus.prometheusSpec.retention"
+    value = "7d"
+  }
+
+  set {
+    name  = "prometheusOperator.image.registry"
+    value = local.ecr_registry
   }
 
   set {
     name  = "prometheusOperator.image.repository"
-    value = aws_ecr_repository.prometheus_operator.repository_url
+    value = aws_ecr_repository.prometheus_operator.name
   }
 
   set {
-    name  = "prometheus.prometheusSpec.image.tag"
-    value = "v2.52.0"
-  }
-  set {
     name  = "prometheusOperator.image.tag"
-    value = "v0.75.0"
+    value = "v0.90.1"
+  }
+
+  set {
+    name  = "prometheusOperator.prometheusConfigReloader.image.registry"
+    value = local.ecr_registry
+  }
+
+  set {
+    name  = "prometheusOperator.prometheusConfigReloader.image.repository"
+    value = aws_ecr_repository.prometheus_config_reloader.name
+  }
+
+  set {
+    name  = "prometheusOperator.prometheusConfigReloader.image.tag"
+    value = "v0.90.1"
+  }
+
+  set {
+    name  = "kubeStateMetrics.image.registry"
+    value = local.ecr_registry
+  }
+
+  set {
+    name  = "kubeStateMetrics.image.repository"
+    value = aws_ecr_repository.kube_state_metrics.name
+  }
+
+  set {
+    name  = "kubeStateMetrics.image.tag"
+    value = "v2.18.0"
+  }
+
+  set {
+    name  = "nodeExporter.image.registry"
+    value = local.ecr_registry
+  }
+
+  set {
+    name  = "nodeExporter.image.repository"
+    value = aws_ecr_repository.node_exporter.name
+  }
+
+  set {
+    name  = "nodeExporter.image.tag"
+    value = "v1.11.1"
+  }
+
+  set {
+    name  = "alertmanager.enabled"
+    value = "false"
   }
 }
 
 resource "helm_release" "kepler" {
   name             = "kepler"
-  repository       = "https://sustainable-computing-io.github.io/kepler-helm-chart"
+  repository = "https://sustainable-computing-io.github.io/kepler-helm-chart"
   chart            = "kepler"
   namespace        = "monitoring"
   create_namespace = true
   wait             = false
+
+  set {
+    name  = "extraEnv[0].name"
+    value = "ENABLE_GPU"
+  }
+
+  set {
+    name  = "extraEnv[0].value"
+    value = "false"
+  }
+
+  set {
+    name  = "extraEnv[1].name"
+    value = "ENABLE_EBPF_CGROUPID"
+  }
+
+  set {
+    name  = "extraEnv[1].value"
+    value = "false"
+  }
+
+  set {
+    name  = "extraEnv[2].name"
+    value = "EXPOSE_HW_COUNTER_METRICS"
+  }
+
+  set {
+    name  = "extraEnv[2].value"
+    value = "false"
+  }
 
   set {
     name  = "canMountLibModules"
@@ -168,17 +321,34 @@ resource "helm_release" "kepler" {
     name  = "image.repository"
     value = aws_ecr_repository.kepler.repository_url
   }
+
+  set {
+    name  = "image.tag"
+    value = "v0.11.4-arm64"
+  }
 }
 
 resource "helm_release" "aws_ebs_csi_driver" {
   name       = "aws-ebs-csi-driver"
   repository = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
-  chart      = "aws-ebs-csi-driver"
+  chart = "aws-ebs-csi-driver"
   namespace  = "kube-system"
   wait       = false
   force_update  = true
   recreate_pods = true
   
+  depends_on = [helm_release.aws_lb_controller]
+
+  set {
+    name  = "image.repository"
+    value = aws_ecr_repository.aws_ebs_csi_driver.repository_url
+  }
+
+  set {
+    name  = "image.tag"
+    value = "v1.58.0"
+  }
+
   set {
     name  = "controller.serviceAccount.create"
     value = "true"
@@ -195,23 +365,62 @@ resource "helm_release" "aws_ebs_csi_driver" {
   }
 
   set {
-    name  = "sidecars.provisioner.image.repository"
+    name = "sidecars.provisioner.image.repository"
     value = aws_ecr_repository.csi_provisioner.repository_url
   }
+
+  set {
+    name  = "sidecars.provisioner.image.tag"
+    value = "v5.2.0"
+  }
+
   set {
     name  = "sidecars.attacher.image.repository"
     value = aws_ecr_repository.csi_attacher.repository_url
   }
+
+  set {
+    name  = "sidecars.attacher.image.tag"
+    value = "v4.8.1"
+  }
+
   set {
     name  = "sidecars.resizer.image.repository"
     value = aws_ecr_repository.csi_resizer.repository_url
   }
+
+  set {
+    name  = "sidecars.resizer.image.tag"
+    value = "v1.13.2"
+  }
+
   set {
     name  = "sidecars.snapshotter.image.repository"
     value = aws_ecr_repository.csi_snapshotter.repository_url
   }
+
+  set {
+    name  = "sidecars.snapshotter.image.tag"
+    value = "v8.2.0"
+  }
+
   set {
     name  = "sidecars.livenessProbe.image.repository"
     value = aws_ecr_repository.livenessprobe.repository_url
+  }
+
+  set {
+    name  = "sidecars.livenessProbe.image.tag"
+    value = "v2.15.0"
+  }
+
+  set {
+    name  = "sidecars.nodeDriverRegistrar.image.repository"
+    value = aws_ecr_repository.csi_node_driver_registrar.repository_url
+  }
+
+  set {
+    name  = "sidecars.nodeDriverRegistrar.image.tag"
+    value = "v2.16.0"
   }
 }
