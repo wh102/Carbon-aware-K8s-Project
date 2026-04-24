@@ -4,11 +4,11 @@ metadata:
   name: mysql
   namespace: flask-app
 spec:
-  ports:
-  - port: 3306
-  clusterIP: None 
   selector:
     app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -29,6 +29,9 @@ spec:
       containers:
       - name: mysql
         image: mysql:8.0
+        ports:
+        - containerPort: 3306
+          name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
@@ -36,13 +39,10 @@ spec:
               name: mysql-secret
               key: password
         - name: MYSQL_DATABASE
-          value: "testdb"
-        ports:
-        - containerPort: 3306
-          name: mysql
+          value: testdb
         volumeMounts:
         - name: mysql-data
-          mountPath: "/var/lib/mysql"
+          mountPath: /var/lib/mysql
   
   volumeClaimTemplates:
   - metadata:

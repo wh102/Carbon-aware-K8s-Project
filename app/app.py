@@ -47,6 +47,11 @@ def init_db():
             logger.warning(f"Waiting for MySQL... (Attempt {i+1}/10). Error: {e}")
             time.sleep(5)
     return False
+
+def init_db_background():
+    while not init_db():
+        time.sleep(5)
+
     
 last_intensity = 0
 last_fetch_time = 0
@@ -111,13 +116,13 @@ def hello():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    new_message = request.form.get('new_message')
+    msg = request.form.get('new_message') or (request.json and request.json.get('new_message'))
     try:
         cur = mysql.connection.cursor()
-        cur.execute('INSERT INTO messages (message) VALUES (%s)', [new_message])
+        cur.execute('INSERT INTO messages (message) VALUES (%s)', [msg])
         mysql.connection.commit()
         cur.close()
-        return jsonify({'message': new_message})
+        return jsonify({'message': msg})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -142,10 +147,10 @@ def ready():
         return jsonify({"status": "ready"}), 200
     return jsonify({"status": "not ready"}), 500
 
-def start_background_thread():
-    if not hasattr(app, "carbon_thread_started"):
-        thread = threading.Thread(target=update_carbon_loop, daemon=True)
-        thread.start()
-        app.carbon_thread_started = True
+def start_background_threads():
+    if not hasattr(app, "threads_started"):
+        threading.Thread(target=init_db_background, daemon=True).start()
+        threading.Thread(target=update_carbon_loop, daemon=True).start()
+        app.threads_started = True
 
-start_background_thread()
+start_background_threads()

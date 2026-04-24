@@ -1,5 +1,11 @@
 .terraform/
 *.tfstate
+*.tfstate.*
+crash.log
+__pycache__/
+.DS_Store
+Thumbs.db
+*.pyc
 *.tfvars
 .env
 kepler/
