@@ -12,10 +12,7 @@ resource "helm_release" "metrics_server" {
     name  = "args[1]"
     value = "--kubelet-preferred-address-types=InternalIP"
   }
-  set {
-    name  = "image.repository"
-    value = aws_ecr_repository.metrics_server.repository_url
-  }
+
   set {
     name  = "image.tag"
     value = "v0.8.0"
@@ -89,6 +86,11 @@ resource "helm_release" "aws_lb_controller" {
   wait       = true
   timeout    = 600
 
+  depends_on = [
+    module.eks,
+    module.load_balancer_controller_irsa_role
+  ]
+
   set {
     name  = "clusterName"
     value = module.eks.cluster_name
@@ -119,18 +121,6 @@ resource "helm_release" "aws_lb_controller" {
     value = var.aws_region
   }
 
-  depends_on = [module.load_balancer_controller_irsa_role]
-
-  set {
-    name  = "image.repository"
-    value = aws_ecr_repository.aws_load_balancer_controller.repository_url
-  }
-
-  set {
-    name  = "image.tag"
-    value = "v2.17.0"
-  }
-  
 }
 
 data "aws_caller_identity" "current" {}
@@ -325,102 +315,5 @@ resource "helm_release" "kepler" {
   set {
     name  = "image.tag"
     value = "v0.11.4-arm64"
-  }
-}
-
-resource "helm_release" "aws_ebs_csi_driver" {
-  name       = "aws-ebs-csi-driver"
-  repository = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
-  chart = "aws-ebs-csi-driver"
-  namespace  = "kube-system"
-  wait       = false
-  force_update  = true
-  recreate_pods = true
-  
-  depends_on = [helm_release.aws_lb_controller]
-
-  set {
-    name  = "image.repository"
-    value = aws_ecr_repository.aws_ebs_csi_driver.repository_url
-  }
-
-  set {
-    name  = "image.tag"
-    value = "v1.58.0"
-  }
-
-  set {
-    name  = "controller.serviceAccount.create"
-    value = "true"
-  }
-
-  set {
-    name  = "controller.serviceAccount.name"
-    value = "ebs-csi-controller-sa"
-  }
-
-  set {
-    name  = "controller.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.ebs_csi_irsa_role.iam_role_arn
-  }
-
-  set {
-    name = "sidecars.provisioner.image.repository"
-    value = aws_ecr_repository.csi_provisioner.repository_url
-  }
-
-  set {
-    name  = "sidecars.provisioner.image.tag"
-    value = "v5.2.0"
-  }
-
-  set {
-    name  = "sidecars.attacher.image.repository"
-    value = aws_ecr_repository.csi_attacher.repository_url
-  }
-
-  set {
-    name  = "sidecars.attacher.image.tag"
-    value = "v4.8.1"
-  }
-
-  set {
-    name  = "sidecars.resizer.image.repository"
-    value = aws_ecr_repository.csi_resizer.repository_url
-  }
-
-  set {
-    name  = "sidecars.resizer.image.tag"
-    value = "v1.13.2"
-  }
-
-  set {
-    name  = "sidecars.snapshotter.image.repository"
-    value = aws_ecr_repository.csi_snapshotter.repository_url
-  }
-
-  set {
-    name  = "sidecars.snapshotter.image.tag"
-    value = "v8.2.0"
-  }
-
-  set {
-    name  = "sidecars.livenessProbe.image.repository"
-    value = aws_ecr_repository.livenessprobe.repository_url
-  }
-
-  set {
-    name  = "sidecars.livenessProbe.image.tag"
-    value = "v2.15.0"
-  }
-
-  set {
-    name  = "sidecars.nodeDriverRegistrar.image.repository"
-    value = aws_ecr_repository.csi_node_driver_registrar.repository_url
-  }
-
-  set {
-    name  = "sidecars.nodeDriverRegistrar.image.tag"
-    value = "v2.16.0"
   }
 }

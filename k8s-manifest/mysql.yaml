@@ -30,8 +30,18 @@ spec:
       - name: mysql
         image: mysql:8.0
         ports:
-        - containerPort: 3306
-          name: mysql
+          - containerPort: 3306
+            name: mysql
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        args:
+          - "--innodb-buffer-pool-size=64M"
+          - "--max_connections=20"
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:

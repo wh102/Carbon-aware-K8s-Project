@@ -10,3 +10,7 @@ Thumbs.db
 .env
 kepler/
 terraform/kepler
+terraform/tfplan
+errored.tfstate
+terraform-backup.tfstate
+*.tfplan

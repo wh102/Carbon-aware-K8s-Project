@@ -20,7 +20,6 @@ variable "db_password" {
   description = "MySQL Root Password"
   type        = string
   sensitive   = true
-  default     = "cak8sdb123"
 }
 
 variable "github_token" {
@@ -28,3 +27,4 @@ variable "github_token" {
   type        = string
   sensitive   = true
 }
+

@@ -30,9 +30,9 @@ resource "kubernetes_secret" "argocd_repo_creds" {
 
   data = {
     type     = "git"
-    url      = "https://github.com/wh102/Carbon-aware-K8s-Project"
-    password = var.github_token
+    url      = "https://github.com/wh102/Carbon-aware-K8s-Project.git"
     username = "wh102"
+    password = var.github_token
   }
 }
 
@@ -42,8 +42,21 @@ resource "kubernetes_secret" "mysql_secret" {
     name      = "mysql-secret"
     namespace = kubernetes_namespace.flask_app.metadata[0].name
   }
+
   data = {
-    password = var.db_password
+    password = base64encode(var.db_password)
   }
-  type = "opaque"
+
+  type = "Opaque"
+}
+
+resource "kubernetes_service_account" "ebs_csi" {
+  metadata {
+    name      = "ebs-csi-controller-sa"
+    namespace = "kube-system"
+
+    annotations = {
+      "eks.amazonaws.com/role-arn" = module.ebs_csi_irsa_role.iam_role_arn
+    }
+  }
 }

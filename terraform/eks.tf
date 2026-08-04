@@ -27,6 +27,9 @@ module "eks" {
         }
       })
     }
+    aws-ebs-csi-driver = {
+      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+    }
   }
     
 
@@ -48,19 +51,10 @@ eks_managed_node_groups = {
       instance_types = ["t4g.small"]
 
       iam_role_attach_cni_policy = true
-      associate_public_ip_address = false
-
-      bootstrap_extra_args = "--kubelet-extra-args '--max-pods=110'"
-
-      pre_bootstrap_user_data = <<-EOT
-         export ENABLE_PREFIX_DELEGATION=true
-         export WARM_PREFIX_TARGET=1
-      EOT
 
       min_size     = 2
       max_size     = 3
       desired_size = 2
-      
       
       iam_role_additional_policies = {
         ebs_csi_policy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
@@ -105,6 +99,11 @@ module "ebs_csi_irsa_role" {
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi_extra" {
+  role       = module.ebs_csi_irsa_role.iam_role_name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "node_ecr_power" {
