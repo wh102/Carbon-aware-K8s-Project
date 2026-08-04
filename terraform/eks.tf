@@ -11,14 +11,14 @@ module "eks" {
       # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/eks/coredns"
     }
     eks-pod-identity-agent = {
-      before_compute   = true
+      before_compute = true
       # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/eks/pod-identity-agent"
     }
     kube-proxy = {
       # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/eks/kube-proxy"
     }
     vpc-cni = {
-      before_compute   = true
+      before_compute = true
       # image_repository = "982166832404.dkr.ecr.eu-west-2.amazonaws.com/k8s/amazon-k8s-cni"
       configuration_values = jsonencode({
         env = {
@@ -31,12 +31,12 @@ module "eks" {
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
     }
   }
-    
+
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
   endpoint_private_access = true
-  endpoint_public_access = true
+  endpoint_public_access  = true
 
   enable_cluster_creator_admin_permissions = true
 
@@ -45,9 +45,9 @@ module "eks" {
 
 
 
-eks_managed_node_groups = {
+  eks_managed_node_groups = {
     example = {
-      ami_type       = "AL2_ARM_64" 
+      ami_type       = "AL2_ARM_64"
       instance_types = ["t4g.small"]
 
       iam_role_attach_cni_policy = true
@@ -55,12 +55,12 @@ eks_managed_node_groups = {
       min_size     = 2
       max_size     = 3
       desired_size = 2
-      
+
       iam_role_additional_policies = {
         ebs_csi_policy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
     }
-}
+  }
 
   tags = {
     Environment = "dev"
@@ -91,7 +91,7 @@ module "ebs_csi_irsa_role" {
   version = "~> 5.0"
 
   role_name             = "ebs-csi-controller-role"
-  attach_ebs_csi_policy = true 
+  attach_ebs_csi_policy = true
 
   oidc_providers = {
     ex = {

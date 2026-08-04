@@ -1,9 +1,9 @@
 resource "helm_release" "metrics_server" {
   name       = "metrics-server"
   namespace  = "kube-system"
-  repository = "https://kubernetes-sigs.github.io/metrics-server" 
-  chart = "metrics-server"
-  wait = true
+  repository = "https://kubernetes-sigs.github.io/metrics-server"
+  chart      = "metrics-server"
+  wait       = true
   set {
     name  = "args[0]"
     value = "--kubelet-insecure-tls"
@@ -30,7 +30,7 @@ resource "helm_release" "keda" {
   chart      = "keda"
   repository = "https://kedacore.github.io/charts"
   version    = "2.18.3"
-  wait = false
+  wait       = false
 
   namespace = kubernetes_namespace.keda.metadata[0].name
 
@@ -261,7 +261,7 @@ resource "helm_release" "prometheus_stack" {
 
 resource "helm_release" "kepler" {
   name             = "kepler"
-  repository = "https://sustainable-computing-io.github.io/kepler-helm-chart"
+  repository       = "https://sustainable-computing-io.github.io/kepler-helm-chart"
   chart            = "kepler"
   namespace        = "monitoring"
   create_namespace = true
