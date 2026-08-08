@@ -63,3 +63,15 @@ spec:
       resources:
         requests:
           storage: 1Gi
+---       
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: flask-app
+  namespace: flask-app
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: "2Gi"
+    limits.cpu: "4"
+    limits.memory: "4Gi"
