@@ -5,14 +5,59 @@ metadata:
   namespace: flask-app
 spec:
   scaleTargetRef:
-    name: flask-app 
+    name: flask-app
+
   minReplicaCount: 1
   maxReplicaCount: 5
+
   pollingInterval: 30 
-  cooldownPeriod: 300 
+  cooldownPeriod: 120
+
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 120
+          policies:
+            - type: Pods
+              value: 1
+              periodSeconds: 60
+        scaleUp:
+          stabilizationWindowSeconds: 30
+          policies:
+            - type: Pods
+              value: 1
+              periodSeconds: 30
   triggers:
     - type: prometheus
+      metricType: Value
       metadata:
         serverAddress: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
-        query: sum(kepler_node_package_joules_total)
-        threshold: '50'
+        metricName: carbon_aware_demand
+        query: |
+          sum(rate(flask_http_requests_total[2m]))
+          *
+          clamp(
+            (300 - max(carbon_intensity)) / 150,
+            0.25,
+            1.25
+          )
+          *
+          clamp(
+            1 /
+            clamp_min(
+              sum(
+                rate(
+                  kepler_container_joules_total{
+                    container_namespace="flask-app",
+                    container_name="flask-app",
+                    mode="dynamic"
+                  }[2m]
+                )
+              ),
+              0.25
+            ),
+            0.5,
+            2
+          )
+        threshold: "1"
