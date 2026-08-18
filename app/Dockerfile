@@ -22,4 +22,4 @@ RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
 EXPOSE 5000
-CMD ["gunicorn", "-w", "3", "--timeout", "30", "--access-logfile", "-", "--error-logfile", "-", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:5000", "app:app"]

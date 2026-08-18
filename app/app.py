@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from flask_mysqldb import MySQL
-from prometheus_client import Gauge
+from prometheus_client import Gauge, Counter
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 import os
@@ -25,7 +25,21 @@ app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'testdb')
 
 mysql = MySQL(app)
 
-carbon_intensity_gauge = Gauge('carbon_intensity', 'UK carbon intensity')
+carbon_intensity_gauge = Gauge(
+    'carbon_intensity',
+    'UK carbon intensity in gCO2/kWh'
+)
+
+http_requests_total = Counter(
+    'flask_http_requests_total',
+    'Total HTTP requests received by the Flask application'
+)
+
+@app.before_request
+def count_request():
+    # Don't count Prometheus scraping itself as application demand
+    if request.path not in ['/metrics', '/health', '/ready']:
+        http_requests_total.inc()
 
 # 2. Database Initialization with Retry Loop (Crucial for t3.micro)
 def init_db():
@@ -53,7 +67,7 @@ def init_db_background():
         time.sleep(5)
 
     
-last_intensity = 0
+last_intensity = 250
 last_fetch_time = 0
 CACHE_DURATION = 60  
 
