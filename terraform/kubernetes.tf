@@ -49,14 +49,3 @@ resource "kubernetes_secret" "mysql_secret" {
 
   type = "Opaque"
 }
-
-resource "kubernetes_service_account" "ebs_csi" {
-  metadata {
-    name      = "ebs-csi-controller-sa"
-    namespace = "kube-system"
-
-    annotations = {
-      "eks.amazonaws.com/role-arn" = module.ebs_csi_irsa_role.iam_role_arn
-    }
-  }
-}

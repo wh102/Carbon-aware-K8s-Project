@@ -184,6 +184,16 @@ resource "helm_release" "prometheus_stack" {
   }
 
   set {
+    name  = "prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]"
+    value = "ReadWriteOnce"
+  }
+
+  set {
+    name  = "prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage"
+    value = "10Gi"
+  }
+
+  set {
     name  = "prometheus.prometheusSpec.resources.requests.memory"
     value = "128Mi"
   }
@@ -314,6 +324,46 @@ resource "helm_release" "kepler" {
 
   set {
     name  = "image.tag"
-    value = "v0.11.4-arm64"
+    value = "release-0.8.0"
   }
+}
+
+resource "kubernetes_manifest" "kepler_servicemonitor" {
+  manifest = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "ServiceMonitor"
+
+    metadata = {
+      name      = "kepler"
+      namespace = "monitoring"
+      labels = {
+        release = "prometheus"
+      }
+    }
+
+    spec = {
+      selector = {
+        matchLabels = {
+          "app.kubernetes.io/name" = "kepler"
+        }
+      }
+
+      namespaceSelector = {
+        matchNames = ["monitoring"]
+      }
+
+      endpoints = [
+        {
+          port     = "http"
+          path     = "/metrics"
+          interval = "15s"
+        }
+      ]
+    }
+  }
+
+  depends_on = [
+    helm_release.kepler,
+    helm_release.prometheus_stack
+  ]
 }

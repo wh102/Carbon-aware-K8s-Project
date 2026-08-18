@@ -14,6 +14,12 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: flask-app
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: flask-app
+      jsonPointers:
+        - /spec/replicas
   syncPolicy:
     automated:
       prune: true
@@ -21,6 +27,7 @@ spec:
       allowEmpty: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
     retry:
       limit: 5
       backoff:

@@ -48,12 +48,12 @@ module "eks" {
   eks_managed_node_groups = {
     example = {
       ami_type       = "AL2_ARM_64"
-      instance_types = ["t4g.small"]
+      instance_types = ["t4g.medium"]
 
       iam_role_attach_cni_policy = true
 
       min_size     = 2
-      max_size     = 3
+      max_size     = 2
       desired_size = 2
 
       iam_role_additional_policies = {
