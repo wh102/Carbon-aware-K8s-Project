@@ -30,7 +30,7 @@ spec:
               periodSeconds: 30
   triggers:
     - type: prometheus
-      metricType: Value
+      metricType: AverageValue
       metadata:
         serverAddress: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
         metricName: carbon_aware_demand
