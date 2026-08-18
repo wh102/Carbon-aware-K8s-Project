@@ -107,6 +107,8 @@ kind: ServiceMonitor
 metadata:
   name: flask-app
   namespace: monitoring
+  labels:
+    release: prometheus
 spec:
   namespaceSelector:
     matchNames:
