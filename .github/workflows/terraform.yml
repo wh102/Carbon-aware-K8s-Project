@@ -1,1 +1,357 @@
+name: Deploy Carbon-Aware EKS Project
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  EKS_CLUSTER_NAME: cluster-cak8s
+
+  TF_IN_AUTOMATION: true
+  TF_INPUT: false
+
+  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_github_token: ${{ secrets.GH_PAT }}
+
+jobs:
+  deploy:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: terraform
+
+    steps:
+      # ---------------------------------------------------------
+      # 1. Checkout
+      # ---------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------
+      # 2. AWS authentication
+      # ---------------------------------------------------------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ---------------------------------------------------------
+      # 3. Terraform
+      # ---------------------------------------------------------
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      # ---------------------------------------------------------
+      # 4. Create network first
+      #
+      # EKS worker nodes require the VPC, private subnets,
+      # NAT gateway and routes to already exist.
+      # ---------------------------------------------------------
+      - name: Deploy VPC
+        run: |
+          terraform apply \
+            -auto-approve \
+            -input=false \
+            -target=module.vpc
+
+      # ---------------------------------------------------------
+      # 5. Bootstrap EKS control plane + OIDC
+      #
+      # Do not apply the entire EKS module yet.
+      # The EBS CSI addon needs its IRSA permissions first.
+      # ---------------------------------------------------------
+      - name: Bootstrap EKS cluster and OIDC provider
+        run: |
+          terraform apply \
+            -auto-approve \
+            -input=false \
+            -target='module.eks.aws_eks_cluster.this[0]' \
+            -target='module.eks.aws_iam_openid_connect_provider.oidc_provider[0]'
+
+      # ---------------------------------------------------------
+      # 6. Configure kubectl
+      # ---------------------------------------------------------
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.31.0
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region "$AWS_REGION" \
+            --name "$EKS_CLUSTER_NAME"
+
+      - name: Verify Kubernetes API
+        run: |
+          kubectl cluster-info
+
+      # ---------------------------------------------------------
+      # 7. Create EBS CSI IRSA role before the EBS addon
+      #
+      # ---------------------------------------------------------
+      - name: Deploy EBS CSI IAM role
+        run: |
+          terraform apply \
+            -auto-approve \
+            -input=false \
+            -target=module.ebs_csi_irsa_role
+
+      - name: Verify EBS CSI IAM permissions
+        run: |
+          DECISION=$(aws iam simulate-principal-policy \
+            --policy-source-arn \
+              arn:aws:iam::982166832404:role/ebs-csi-controller-role \
+            --action-names ec2:DescribeAvailabilityZones \
+            --query 'EvaluationResults[0].EvalDecision' \
+            --output text)
+
+          echo "EBS CSI IAM decision: $DECISION"
+
+          if [ "$DECISION" != "allowed" ]; then
+            echo "EBS CSI IAM permissions are not ready."
+            exit 1
+          fi
+
+      # ---------------------------------------------------------
+      # 8. Complete EKS
+      #
+      # The EBS CSI addon can now start with valid IAM
+      # permissions.
+      # ---------------------------------------------------------
+      - name: Complete EKS deployment
+        run: |
+          terraform apply \
+            -auto-approve \
+            -input=false \
+            -target=module.eks
+
+      - name: Refresh kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region "$AWS_REGION" \
+            --name "$EKS_CLUSTER_NAME"
+
+      - name: Wait for EKS nodes
+        run: |
+          kubectl wait \
+            --for=condition=Ready \
+            nodes \
+            --all \
+            --timeout=15m
+
+      # ---------------------------------------------------------
+      # 9. Handle EBS CSI service-account ownership if the
+      # Kubernetes resource still exists in Terraform config.
+      #
+      # The EKS-managed addon creates this service account.
+      # ---------------------------------------------------------
+      - name: Reconcile EBS CSI service account
+        run: |
+          if grep -R -q \
+            'resource "kubernetes_service_account" "ebs_csi"' \
+            .; then
+
+            if kubectl get serviceaccount \
+              ebs-csi-controller-sa \
+              -n kube-system >/dev/null 2>&1; then
+
+              if ! terraform state show \
+                kubernetes_service_account.ebs_csi \
+                >/dev/null 2>&1; then
+
+                terraform import \
+                  -input=false \
+                  kubernetes_service_account.ebs_csi \
+                  kube-system/ebs-csi-controller-sa
+              fi
+            fi
+          fi
+
+      - name: Wait for EBS CSI controller
+        run: |
+          kubectl rollout status \
+            deployment/ebs-csi-controller \
+            -n kube-system \
+            --timeout=10m
+
+      - name: Verify EBS CSI addon
+        run: |
+          STATUS=$(aws eks describe-addon \
+            --region "$AWS_REGION" \
+            --cluster-name "$EKS_CLUSTER_NAME" \
+            --addon-name aws-ebs-csi-driver \
+            --query 'addon.status' \
+            --output text)
+
+          echo "EBS CSI addon status: $STATUS"
+
+          if [ "$STATUS" != "ACTIVE" ]; then
+            echo "EBS CSI addon is not ACTIVE."
+            exit 1
+          fi
+
+      # ---------------------------------------------------------
+      # 10. Install Prometheus first
+      #
+      # The Kepler ServiceMonitor resource cannot be planned
+      # until the Prometheus Operator ServiceMonitor CRD exists.
+      # ---------------------------------------------------------
+      - name: Deploy Prometheus stack
+        run: |
+          terraform apply \
+            -auto-approve \
+            -input=false \
+            -target=helm_release.prometheus_stack
+
+      - name: Wait for ServiceMonitor CRD
+        run: |
+          kubectl wait \
+            --for=condition=Established \
+            crd/servicemonitors.monitoring.coreos.com \
+            --timeout=10m
+
+      # ---------------------------------------------------------
+      # 11. Apply remaining Terraform
+      # ---------------------------------------------------------
+      - name: Apply remaining infrastructure
+        run: |
+          terraform apply \
+            -auto-approve \
+            -input=false
+
+      # ---------------------------------------------------------
+      # 12. Verify core platform
+      # ---------------------------------------------------------
+      - name: Verify Kubernetes platform
+        run: |
+          echo "=== Nodes ==="
+          kubectl get nodes -o wide
+
+          echo "=== System Pods ==="
+          kubectl get pods -n kube-system
+
+          echo "=== Monitoring ==="
+          kubectl get pods -n monitoring
+
+          echo "=== KEDA ==="
+          kubectl get pods -n keda
+
+      # ---------------------------------------------------------
+      # 13. Install Argo CD
+      #
+      # ---------------------------------------------------------
+      - name: Ensure Argo CD namespace exists
+        working-directory: .
+        run: |
+          kubectl get namespace argocd >/dev/null 2>&1 \
+            || kubectl create namespace argocd
+
+      - name: Install Argo CD
+        working-directory: .
+        run: |
+          kubectl apply \
+            --server-side \
+            --force-conflicts \
+            -n argocd \
+            -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.1/manifests/install.yaml
+
+      - name: Wait for Argo CD
+        working-directory: .
+        run: |
+          kubectl wait \
+            --for=condition=Available \
+            deployment \
+            --all \
+            -n argocd \
+            --timeout=10m
+
+          kubectl rollout status \
+            statefulset/argocd-application-controller \
+            -n argocd \
+            --timeout=10m
+
+      # ---------------------------------------------------------
+      # 14. Deploy Argo CD Project + Application
+      # ---------------------------------------------------------
+      - name: Apply Argo CD project
+        working-directory: .
+        run: |
+          kubectl apply -f argocd-project.yaml
+
+      - name: Apply Argo CD application
+        working-directory: .
+        run: |
+          kubectl apply -f argocd-app.yaml
+
+      # ---------------------------------------------------------
+      # 15. Wait for application
+      # ---------------------------------------------------------
+      - name: Wait for application resources
+        working-directory: .
+        run: |
+          echo "Waiting for Flask and MySQL workloads..."
+
+          kubectl rollout status \
+            deployment/flask-app \
+            -n flask-app \
+            --timeout=15m
+
+          kubectl rollout status \
+            statefulset/mysql \
+            -n flask-app \
+            --timeout=15m
+
+      # ---------------------------------------------------------
+      # 16. Final deployment verification
+      # ---------------------------------------------------------
+      - name: Final verification
+        working-directory: .
+        run: |
+          echo "======================================"
+          echo "ARGO CD"
+          echo "======================================"
+          kubectl get applications -n argocd
+
+          echo
+          echo "======================================"
+          echo "FLASK APPLICATION"
+          echo "======================================"
+          kubectl get pods -n flask-app
+          kubectl get svc -n flask-app
+          kubectl get ingress -n flask-app
+          kubectl get pvc -n flask-app
+
+          echo
+          echo "======================================"
+          echo "CARBON-AWARE AUTOSCALER"
+          echo "======================================"
+          kubectl get scaledobject -n flask-app
+          kubectl get hpa -n flask-app
+
+          echo
+          echo "======================================"
+          echo "MONITORING"
+          echo "======================================"
+          kubectl get pods -n monitoring
+
+          echo
+          echo "======================================"
+          echo "DEPLOYMENT COMPLETE"
+          echo "======================================"
