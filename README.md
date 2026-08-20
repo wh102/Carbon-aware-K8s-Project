@@ -21,7 +21,9 @@ The project demonstrates how Kubernetes workloads can be deployed, monitored and
 - [Repository Structure](#repository-structure)
 - [Results](#results)
 - [Destroying the Infrastructure](#destroying-the-infrastructure)
+- [Security Considerations](#security-considerations)
 - [Limitations and Future Improvements](#limitations-and-future-improvements)
+- [Project Objectives](#project-objectives)
 - [Acknowledgments](#acknowledgments)
 
 ---
@@ -536,6 +538,13 @@ kubectl get ingress -n flask-app
 
 Once the AWS Application Load Balancer is available, its address can be used to access the Flask application.
 
+### Deployed Application
+
+The Flask application was successfully exposed through the AWS Application
+Load Balancer.
+
+![Flask Application Running on Amazon EKS](docs/images/flask-app.png)
+
 ---
 
 ## Monitoring and Observability
@@ -582,6 +591,9 @@ To obtain a single cluster-wide value:
 ```promql
 max(carbon_intensity)
 ```
+### Prometheus Carbon Intensity
+
+![Prometheus - Carbon Intensity Query](docs/images/prometheus-query-2.png)
 
 ---
 
@@ -676,7 +688,9 @@ Carbon-Aware Metric
 Kubernetes Scaling
 ```
 
-Screenshots of the completed monitoring environment and project validation can be retained as supporting project evidence.
+### Carbon-Aware Monitoring Dashboard
+
+![Grafana - UK Carbon Intensity](docs/images/grafana-uk-carbon-intensity.png)
 
 ---
 
@@ -712,24 +726,49 @@ Replica changes can be observed with:
 kubectl get pods -n flask-app -w
 ```
 
-During project testing, increased application demand caused KEDA and HPA to increase the number of Flask replicas.
+### Carbon-Aware Scaling Validation
 
-After traffic reduced and the configured stabilisation period elapsed, the deployment scaled back down.
+The Grafana monitoring results demonstrate the relationship between
+application demand and the carbon-aware scaling signal used by KEDA.
+
+During load testing, the Flask application request rate increased as
+HTTP traffic was generated against the application. The carbon-aware
+scaling metric followed the same overall pattern, demonstrating that
+changes in application demand were propagated through the Prometheus
+query used by the KEDA scaler.
+
+#### Application Request Rate
+
+![Flask Application Request Rate](docs/images/grafana-application-request-rate.png)
+
+#### Carbon-Aware Scaling Metric
+
+![Carbon-Aware Scaling Metric](docs/images/grafana-carbon-aware-scaling-score.png)
+
+The similarity between these graphs is expected because application
+request rate is one of the three inputs to the carbon-aware scaling
+formula. The final scaling signal additionally modifies application
+demand according to current UK carbon intensity and Kepler-measured
+workload energy consumption.
+
+During the final load test, the KEDA external metric caused the
+Kubernetes HPA to increase the Flask deployment from one replica to
+two replicas. After the generated traffic stopped and the configured
+stabilisation period elapsed, the deployment subsequently returned
+toward its minimum replica count.
 
 This demonstrated the complete autoscaling path:
 
 ```text
 HTTP Traffic
      ↓
-Flask Prometheus Counter
+Flask request metric
      ↓
 Prometheus
      ↓
 Carbon + Energy Adjustments
      ↓
-KEDA
-     ↓
-External Metric
+KEDA external metric
      ↓
 Kubernetes HPA
      ↓
@@ -822,22 +861,22 @@ Carbon-aware-K8s-Project/
 │
 ├── terraform/
 │   ├── ecr.tf
-|   ├── eks.tf
-|   ├── helm.tf
-|   ├── kubernetes.tf
-|   ├── vpc.tf
+│   ├── eks.tf
+│   ├── helm.tf
+│   ├── kubernetes.tf
+│   ├── vpc.tf
 │   ├── variables.tf
 │   ├── outputs.tf
 │   ├── provider.tf
-|   ├── app-namespace.tf
-|   ├── .terraform.lock.hcl
-|   ├── kepler-config.yaml
+│   ├── app-namespace.tf
+│   ├── .terraform.lock.hcl
+│   ├── kepler-config.yaml
 │   └── kepler-values.yaml
 │
 ├── app/
-|   ├── Dockerfile
-|   ├── app.py
-|   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── requirements.txt
 │   └── templates/
 │       └── index.html
 ├── .dockerignore
@@ -849,7 +888,6 @@ Carbon-aware-K8s-Project/
 └── README.md
 ```
 
-> The exact Terraform file layout may vary as the infrastructure configuration evolves.
 
 ---
 
@@ -907,6 +945,13 @@ Terraform successfully provisioned the AWS and Kubernetes infrastructure.
 
 The Flask application successfully ran on Amazon EKS and communicated with MySQL.
 
+### Kubernetes Workloads
+
+The Flask application and MySQL database were successfully deployed and
+running inside the EKS cluster.
+
+![Kubernetes Running Pods](docs/images/cak8s-application-running.png)
+
 ### External Access
 
 The application was accessible through an AWS Application Load Balancer.
@@ -933,6 +978,9 @@ flask_http_requests_total
 
 counter successfully measured application requests.
 
+![Prometheus Request Total](docs/images/prometheus-query-3_1.png)
+![Prometheus Request Total](docs/images/prometheus-query-3_2.png)
+
 ### Energy Monitoring
 
 Kepler successfully produced container-level energy measurements for the Flask workload.
@@ -940,6 +988,8 @@ Kepler successfully produced container-level energy measurements for the Flask w
 ### Carbon-Aware Metric
 
 Prometheus successfully combined application demand, carbon intensity and Kepler energy data into a single scaling signal.
+
+![Grafana](docs/images/grafana-carbon-aware-scaling-score.png)
 
 ### Autoscaling
 
