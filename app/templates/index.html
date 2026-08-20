@@ -25,7 +25,7 @@
             padding: 20px;
         }
 
-        /* Flex container for profile + content */
+        /* Main content container */
         .container {
             display: flex;
             flex-direction: row;
@@ -38,20 +38,8 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
         }
 
-        /* Left side: profile photo */
-        .profile-photo {
-            flex: 0 0 200px;
-            margin-right: 30px;
-        }
 
-        .profile-photo img {
-            width: 100%;
-            border-radius: 50%;
-            border: 3px solid #5599FF;
-            box-shadow: 0 4px 15px rgba(85, 153, 255, 0.5);
-        }
-
-        /* Right side: content */
+        /* Main content */
         .content {
             flex: 1;
         }
@@ -149,22 +137,13 @@
                 flex-direction: column;
                 align-items: center;
             }
-
-            .profile-photo {
-                margin-right: 0;
-                margin-bottom: 20px;
-                flex: 0 0 auto;
-            }
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <!-- Profile photo -->
-        <div class="profile-photo">
-            <img src="1.png" alt="Prashant Photo">
-        </div>
+        
 
 <!-- Content -->
 <div class="content">
@@ -173,15 +152,29 @@
         <p> Aspiring Cloud & DevOps Engineer</p>
     </div>
     <div class="about" style="text-align: center; border: 1px solid rgba(85, 153, 255, 0.3);">
-        {% if intensity == "low" or intensity == "very low" %}
-            <h3 style="color: #4ade80;">🌱 Grid Status: {{ intensity | upper }}</h3>
-            <p style="font-size: 0.8rem; color: #aaa;">Carbon-Aware Scaling: High-intensity tasks enabled.</p>
-        {% elif intensity == "high" or intensity == "very high" %}
-            <h3 style="color: #f87171;">⚠️ Grid Status: {{ intensity | upper }}</h3>
-            <p style="font-size: 0.8rem; color: #aaa;">Carbon-Aware Scaling: Running in low-power mode.</p>
+        {% if intensity < 150 %}
+            <h3 style="color: #4ade80;">
+                🌱 Grid Carbon Intensity: LOW
+            </h3>
+            <p style="font-size: 0.8rem; color: #aaa;">
+                Current intensity: {{ intensity }} gCO₂/kWh
+            </p>
+        
+        {% elif intensity < 250 %}
+            <h3 style="color: #fbbf24;">
+                ⚙️ Grid Carbon Intensity: MODERATE
+            </h3>
+            <p style="font-size: 0.8rem; color: #aaa;">
+                Current intensity: {{ intensity }} gCO₂/kWh
+            </p>
+        
         {% else %}
-            <h3 style="color: #fbbf24;">⚙️ Grid Status: {{ intensity | upper }}</h3>
-            <p style="font-size: 0.8rem; color: #aaa;">Monitoring UK National Grid data...</p>
+            <h3 style="color: #f87171;">
+                ⚠️ Grid Carbon Intensity: HIGH
+            </h3>
+            <p style="font-size: 0.8rem; color: #aaa;">
+                Current intensity: {{ intensity }} gCO₂/kWh
+            </p>
         {% endif %}
     </div>
 
@@ -190,9 +183,11 @@
         <h2>About Me</h2>
         <p>Hi, I'm <b>W</b> 👋, an aspiring Cloud & DevOps engineer.</p>
         <p style="margin-top:10px;">
-            <b>Project:</b> I have deployed a 2-tier <b>Carbon-Aware</b> application on <b>Amazon EKS (Kubernetes)</b>. 
-            It uses <b>KEDA</b> to scale replicas based on real-time UK National Grid intensity. 
-            The infrastructure is automated via <b>Terraform</b> and managed with <b>GitOps (ArgoCD)</b> for a true cloud-native lifecycle.
+            <b>Project:</b> I have deployed a 2-tier <b>Carbon-Aware</b> application on <b>Amazon EKS (Kubernetes)</b>.
+                            It uses <b>KEDA</b> and <b>Prometheus</b> to autoscale application replicas using a carbon-aware metric that combines
+                            <b>application demand, real-time UK grid carbon intensity, and workload energy consumption measured by Kepler</b>.
+                            The infrastructure is automated with <b>Terraform</b> and managed using <b>GitOps (Argo CD)</b>
+                            for a cloud-native deployment lifecycle.
         </p>
     </div>
 
@@ -210,7 +205,8 @@
     <p style="font-size: 0.7rem; color: #555; text-align: right; margin-top: 10px;">
         Server ID: {{ pod_name }}
     </p>
-</div>
+    </div> <!-- .content -->
+</div> <!-- .container -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
