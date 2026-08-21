@@ -543,7 +543,7 @@ Once the AWS Application Load Balancer is available, its address can be used to 
 The Flask application was successfully exposed through the AWS Application
 Load Balancer.
 
-![Flask Application Running on Amazon EKS](docs/images/flask-app.png)
+![Flask Application Running on Amazon EKS](docs/images/cak8s-application-running.png)
 
 ---
 
