@@ -1,8 +1,0 @@
-rapl:
-  enabled: false
-
-hwmon:
-  enabled: false
-
-estimator:
-  enabled: true
